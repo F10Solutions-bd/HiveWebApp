@@ -1,0 +1,61 @@
+import { Carrier } from "./carrier";
+import { Commodity } from "./commodity";
+import { Charge } from "./charge";
+import { Notification } from "./notification";
+import { Driver } from "./driver";
+import { Delivery } from "./delivery";
+import { Pickup } from "./pickup";
+import { Return } from "./return";
+import { Document } from "./document";
+
+export interface Load {
+    id: number;
+    customerId: number;
+    salesRepId: number;
+    operatorId: number;
+    loadType: string;
+    equipmentType: string;
+    minimumTemperature?: number;
+    maximumTemperature?: number;
+    po: string;
+    customerName?: string;
+    salesRepName?: string;
+    operatorName?: string;
+    billed: number;
+    cost: number;
+    margin: number;
+    carrierOffer?: number;
+    carrierPayUpTo?: number;
+    customerTotal?: number;
+    carrierTotal?: number;
+    loadedMiles?: number;
+    pickup?: string;
+    delivery?: string;
+    mbol?: string;
+    ctnr?: string;
+    ssl?: string;
+    eta?: string;
+    lfd?: string;
+    seal: string;
+    bkg: string;
+    erd?: string;
+    cut?: string;
+    status: string;
+    timestampNotes: string;
+    generalNotes: string;
+
+    carrierDueDate?: string;
+    carrierPaidDate?: string;
+    carrierPaymentType?: string;
+    carrierAmountPaid?: number;
+
+    carriers?: Carrier[];
+    commodities?: Commodity[];
+    charges?: Charge[];
+    notifications?: Notification[];
+    drivers?: Driver[];
+    deliveries?: Delivery[];
+    pickups?: Pickup[];
+    returns?: Return[];
+    documents?: Document[];
+}

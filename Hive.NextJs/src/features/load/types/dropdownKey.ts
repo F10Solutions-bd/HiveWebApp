@@ -1,0 +1,15 @@
+export type DropdownKeys =
+    | 'shipper'
+    | 'loadType'
+    | 'loadStatus'
+    | 'equipmentType'
+    | 'documentCategory'
+    | 'pickupType'
+    | 'deliveryType'
+    | 'consignee'
+    | 'port'
+    | 'paymentType'
+    | 'packageType'
+    | 'weightUnit'
+    | 'lengthUnit'
+    | 'commoditiesValue';
