@@ -11,7 +11,8 @@ import { useRouter } from "next/navigation";
 import { loadStausTableMap } from '@/features/load/constants';
 import { toDisplayDateString } from '@/utils/dateHelper';
 import { toast } from 'react-hot-toast';
-import { SelectOption, LoadFilter, LoadCreate, Customer } from '@/features/dashboard/types';
+import { LoadFilter, LoadCreate, Customer } from '@/features/dashboard/types';
+import { SelectOption } from '@/types/common';
 
 export default function Loads() {
     const router = useRouter();
