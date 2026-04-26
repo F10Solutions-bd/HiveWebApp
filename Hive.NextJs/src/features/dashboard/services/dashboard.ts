@@ -1,15 +1,12 @@
 // services/dashboard.api.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { createApiClient } from '@/services/apiClient';
+import api from '@/services/apiClient';
 import { LeaderboardItem, OfficeLeaderboardItem, LoadFilter, Customer } from '../types';
-import { SelectOption } from '../../../types/common';
-import { Load } from '../../load/types';
-
-const api = createApiClient();
+import { SelectOption } from '@/types/common';
 
 export const getLoads = (params: LoadFilter) =>
-    api.get<Load[]>("/loads", { params });
+    api.get<any>("/loads", { params });
 
 export const getLeaderboard = (params: any) =>
     api.get<LeaderboardItem[]>("/dashboards/leaderboard", { params });
@@ -24,7 +21,4 @@ export const getLoadTypes = () =>
     api.get<SelectOption[]>("/loads/load-types");
 
 export const getSalesReps = () =>
-    api.get("/users/sales-representative");
-
-export const getDropdownByName = (name: string) =>
-    api.get<SelectOption[]>(`/service-tables/dropdown-by-table-name/${name}`);
+    api.get<SelectOption[]>("/users/sales-representative");

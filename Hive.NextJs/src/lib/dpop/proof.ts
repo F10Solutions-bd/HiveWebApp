@@ -5,7 +5,9 @@ export async function createDPoPProof(
     url: string,
     keyPair: CryptoKeyPair | null
 ) {
-    if (!keyPair) return null; // Server Side Rendering (does not sign)
+    if (!keyPair) return null;
+
+    const now = Math.floor(Date.now() / 1000);
 
     return await new jose.SignJWT({
         htm: method,
@@ -17,6 +19,7 @@ export async function createDPoPProof(
             alg: "ES256",
             jwk: await jose.exportJWK(keyPair.publicKey),
         })
-        .setIssuedAt()
+        .setIssuedAt(now)
+        .setExpirationTime(now + 5) // 5 seconds expiry
         .sign(keyPair.privateKey);
 }

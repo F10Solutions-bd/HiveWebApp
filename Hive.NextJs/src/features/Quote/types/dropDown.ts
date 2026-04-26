@@ -1,4 +1,4 @@
-import { SelectOption } from "../../../types/common";
+import { SelectOption } from "@/types/common";
 
 export type DropdownKey = 'equipment' | 'account' | 'mode' | 'city' | 'state';
 

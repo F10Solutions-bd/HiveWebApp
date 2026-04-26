@@ -61,10 +61,12 @@ export const createApiClient = (): {
         // ==========================
         try {
             const keyPair = await getOrCreateKeyPair();
-            const url = `${config.baseURL ?? ''}${config.url}`;
+            //const url = `${config.baseURL ?? ''}${config.url}`;
+            const rawUrl = `${config.baseURL ?? ''}${config.url ?? ''}`;
+            const urlWithoutQuery = rawUrl.split('?')[0];
             const method = (config.method ?? 'GET').toUpperCase();
-            
-            const dpopProof = await createDPoPProof(method, url, keyPair);
+
+            const dpopProof = await createDPoPProof(method, urlWithoutQuery, keyPair);
             if (dpopProof) {
                 config.headers.DPoP = dpopProof;
             }

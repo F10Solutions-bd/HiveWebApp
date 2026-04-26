@@ -14,3 +14,10 @@ export const getStatusColor = (status: string) => {
             return '!bg-secondary !text-fg';
     }
 };
+
+export const DEFAULT_DATE_RANGE = 'month_to_date';
+
+export const LOAD_TYPES = {
+    TRUCKLOAD: 'truckload',
+    DRAYAGE: 'drayage',
+};
