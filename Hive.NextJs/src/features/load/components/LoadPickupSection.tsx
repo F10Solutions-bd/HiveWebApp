@@ -364,8 +364,8 @@ export function LoadPickupSection({
                                                 />
                                             </div>
 
-                                            <div className="flex items-center">
-                                                <div className="xl:w-[130px] w-[80] text-right">
+                                            <div className="flex items-center gap-1">
+                                                <div className="xl:w-[130px] w-[80] text-right xl:whitespace-nowrap -ml-1">
                                                     <span className="text-danger mr-1">*</span>
                                                     Driver In/Out Time:
                                                 </div>

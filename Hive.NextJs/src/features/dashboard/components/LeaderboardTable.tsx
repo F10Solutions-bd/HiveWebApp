@@ -2,18 +2,19 @@
 // css design
 
 import Select from '@/components/modal/Select';
-import { LeaderboardItem, OfficeLeaderboardItem } from '../types';
+import { LeaderboardItem } from '../types';
 import { SelectOption } from '@/types/common';
 
 export const LeaderboardTable: React.FC<{
-    data: LeaderboardItem[] | OfficeLeaderboardItem[];
+    data: LeaderboardItem[];
     title: string;
     dateRange: string;
     onDateRangeChange: (value: string) => void;
     dateRangeOptions: SelectOption[];
     onNameClick?: (id: number, e: React.MouseEvent<HTMLSpanElement>) => void;
-    isOffice?: boolean;
+    label: string;
     containerHeight?: number;
+    loading?: boolean;
 }> = ({
     data,
     title,
@@ -21,21 +22,26 @@ export const LeaderboardTable: React.FC<{
     onDateRangeChange,
     dateRangeOptions,
     onNameClick,
-    isOffice = false,
+    label,
     containerHeight = 350,
+    loading,
 }) => {
+
+        const isEmpty = !data.length;
+
         return (
             <div className="bg-bg rounded-lg p-2 flex flex-col" style={{ height: `${containerHeight}px` }}>
-                <div className="relative flex items-center justify-end h-8">
-                    <h2 className="absolute left-1/2 -translate-x-1/2 text-xl font-semibold text-fg w-max">
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center h-8">
+                    <div />
+                    <h2 className="text-xl font-semibold text-fg text-center truncate">
                         {title}
                     </h2>
-                    <div className="">
+                    <div className="flex justify-end">
                         <Select
                             options={dateRangeOptions}
                             value={dateRange}
                             placeholder="Select Date Filter"
-                            className="border-none !py-4 !rounded-md !text-sm !w-[100px] xl:!w-[110px] 2xl:!w-[130px] !bg-secondary"
+                            className="border-none !py-4 !rounded-md !text-sm !w-[100px] xl:!w-[110px] 2xl:!w-[120px] !bg-secondary"
                             dropdownWidth=""
                             onSelect={(val) => onDateRangeChange(val)}
                         />
@@ -48,9 +54,8 @@ export const LeaderboardTable: React.FC<{
                                 <th className='!py-[3px]'> <span>Rank</span></th>
                                 <th className="text-left  !py-[3px] text-sm font-sm text-fg">
                                     <span>
-                                        {isOffice ? 'Office' : title.includes('Sales') ? 'Sales Rep' : 'Ops Rep'}
+                                        {label}
                                     </span>
-
                                 </th>
                                 <th className='!py-[3px]'><span>Load Ct.</span></th>
                                 <th className='!py-[3px]'><span>Revenue</span></th>
@@ -59,52 +64,58 @@ export const LeaderboardTable: React.FC<{
                             </tr>
                         </thead>
                         <tbody>
-                            {data.length > 0 ? (
+                            {loading ? (
+                                    <tr>
+                                        <td colSpan={6} className="!text-center !py-15 text-sm text-fg">
+                                            Loading...
+                                        </td>
+                                    </tr>
+                            ) : isEmpty ? (
+                                // Empty state
+                                <tr>
+                                    <td colSpan={6} className="!text-center !py-15 text-sm text-fg">
+                                        No data available
+                                    </td>
+                                </tr>
+                            ) : (
+                                // Data rows
                                 data.map((item, index) => (
                                     <tr
                                         key={index}
-                                        className={`${index === 5 ? "border-t border-border" : ""}`}
+                                        className={index === 5 ? "border-t border-border" : ""}
                                     >
                                         <td className="!text-center !py-[3px]">{item.rank}.</td>
-                                        <td className=" text-sm !py-[3px]">
-                                            {onNameClick && !isOffice ? (
+
+                                        <td className="text-sm !py-[3px]">
+                                            {onNameClick ? (
                                                 <button
-                                                    onClick={(e) =>
-                                                        onNameClick((item as LeaderboardItem).id, e)
-                                                    }
-                                                    className="text-primary underline cursor-pointer  font-sm"
+                                                    onClick={(e) => onNameClick(item.id, e)}
+                                                    className="text-primary underline cursor-pointer"
                                                 >
-                                                    {(item as LeaderboardItem).fullName}
+                                                    {item.fullName}
                                                 </button>
                                             ) : (
-                                                <span className="text-primary underline font-sm cursor-pointer ">
-                                                    {isOffice
-                                                        ? (
-                                                            item as OfficeLeaderboardItem
-                                                        ).fullName
-                                                        : (item as LeaderboardItem)
-                                                            .fullName}
+                                                <span className="text-primary underline cursor-pointer">
+                                                    {item.fullName}
                                                 </span>
                                             )}
                                         </td>
+
                                         <td className="!text-center !py-[3px]">{item.loadCount}</td>
+
                                         <td className="!text-center !py-[3px]">
                                             ${item.revenue.toFixed(2)}
                                         </td>
+
                                         <td className="!text-center !py-[3px]">
                                             ${item.grossMargin.toFixed(2)}
                                         </td>
+
                                         <td className="!text-center !py-[3px]">
                                             {item.grossMarginPercent.toFixed(2)}%
                                         </td>
                                     </tr>
                                 ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={6} className="!text-center !py-15">
-                                        No data available
-                                    </td>
-                                </tr>
                             )}
                         </tbody>
                     </table>

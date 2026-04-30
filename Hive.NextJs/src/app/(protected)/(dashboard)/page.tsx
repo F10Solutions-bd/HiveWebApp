@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { DynamicBarChart } from '@/components/ui/Dashboard/DynamicBarChart';
+import React, { useState, useMemo } from 'react';
 import Select from '@/components/modal/Select';
 import EmployeeModal from '@/components/modal/EmployeeModal';
 import CarrierModal from '@/components/modal/CarrierModal';
@@ -13,41 +11,57 @@ import { useRouter } from "next/navigation";
 //import { loadStausTableMap } from '@/features/load/constants';
 //import { toDisplayDateString } from '@/utils/dateHelper';
 import { toast } from 'react-hot-toast';
-import { LeaderboardItem, OfficeLeaderboardItem, LoadFilter, LeaderboardFilter, LoadCreate } from '@/features/dashboard/types';
-import { LeaderboardTable } from '@/features/dashboard/components/LeaderboardTable';
+import { LoadFilter, LoadCreate } from '@/features/dashboard/types';
 import CreateQuoteModal from '@/features/Quote/components/modals/CreateQuoteModal';
 import QuickRateModal from '@/features/quickRate/components/modals/QuickRateModal';
 //import { getStatusColor } from '@/features/dashboard/constants';
-import { getLeaderboard, getOfficeLeaderboard } from '@/features/dashboard/services/dashboard';
+//import { getLeaderboard } from '@/features/dashboard/services/dashboard';
 import { useLoads } from '@/features/dashboard/hook/useLoads';
 import { useDropdowns } from '@/features/dashboard/hook/useDropdowns';
 import CreateLoadForm from '@/features/dashboard/components/forms/CreateLoadForm';
-import LoadTable from '../../../features/dashboard/components/LoadTable';
+import LoadTable from '@/features/dashboard/components/LoadTable';
+import { LeaderboardSection } from '@/features/dashboard/components/sections/LeaderboardSection';
 
+import OfficeModal from '@/features/dashboard/components/modals/OfficeModal';
+import { getTop5 } from '@/features/dashboard/utils/formatters';
+import { LeaderboardChartSection } from '@/features/dashboard/components/sections/LeaderboardChartSection';
+import { useLeaderboard } from '@/features/dashboard/hook/useLeaderboard';
+import { useModalManager } from '@/features/dashboard/hook/useModalManager';
+
+const DEFAULT_RANGE = "month_to_date";
 
 // Main Dashboard Component
 const Dashboard: React.FC = () => {
     const api = createApiClient();
-    const [salesDateRange, setSalesDateRange] = useState('month_to_date');
-    const [operationsDateRange, setOperationsDateRange] = useState('month_to_date');
-    const [officeDateRange, setOfficeDateRange] = useState('month_to_date');
-    const [salesLoading, setSalesLoading] = useState(false);
-    const [operatorLoading, setOperatorLoading] = useState(false);
-    const [officeLoading, setOfficeLoading] = useState(false);
-    const [isOpenEmployeeModal, setIsOpenEmployeeModal] = useState(false);
-    const [isOpenCarrierModal, setIsOpenCarrierModal] = useState(false);
-    const [isOpenCustomerModal, setIsOpenCustomerModal] = useState(false);
+    const [salesDateRange, setSalesDateRange] = useState(DEFAULT_RANGE);
+    const [operationsDateRange, setOperationsDateRange] = useState(DEFAULT_RANGE);
+    const [officeDateRange, setOfficeDateRange] = useState(DEFAULT_RANGE);
+
     const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>('1');
     const [selectedCarrierId, setSelectedCarrierId] = useState<string>('1');
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>('1');
-    const [isOpenQuickRate, setIsOpenQuickRate] = useState(false);
-    const [isOpenCreateQuoteModal, setIsOpenCreateQuoteModal] = useState(false);
-    const [isOpenCreateLoadModal, setIsOpenCreateLoadModal] = useState(false);
+    const [selectedOfficeId, setSelectedOfficeId] = useState<string>('1');
 
-    const [anchorPos, setAnchorPos] = useState<{
-        top: number;
-        left: number;
-    } | null>(null);
+    const sales = useLeaderboard("sales", salesDateRange);
+    const operator = useLeaderboard("operator", operationsDateRange);
+    const office = useLeaderboard("office", officeDateRange);
+
+    const leaderboardData = useMemo(() => ({
+        sales: getTop5(sales.data),
+        operations: getTop5(operator.data),
+        offices: getTop5(office.data),
+    }), [
+        sales,
+        operator,
+        office
+    ]);
+
+    const leaderboardLoading = {
+        sales: sales.loading,
+        operations: operator.loading,
+        offices: office.loading,
+    };
+
     const [loadCreateFormData, setLoadCreateFormData] = useState<LoadCreate>({
         id: 0,
         customerId: 0,
@@ -57,15 +71,9 @@ const Dashboard: React.FC = () => {
     });
     const router = useRouter();
 
-    //const [customerIdForCreateLoad, setCustomerIdForCreatLoad] = useState('');
-    //const [loadTypeForCreateLoad, setLoadTypeForCreateLoad] = useState('');
-    const [salesRepLoadData, setSalesRepLoadData] = useState<LeaderboardItem[]>([]);
-    const [operatorLoadData, setOperatorLoadData] = useState<LeaderboardItem[]>([]);
-    const [officeLoadData, setOfficeLoadData] = useState<OfficeLeaderboardItem[]>([]);
     const [activeLoadTypeTab, setActiveLoadTypeTab] = useState<'truckload' | 'drayage'>('truckload');
 
     // Filtering State
-    //const [tableData, setTableData] = useState<LoadFilter[]>([]);
     const [loadFilter, setLoadFilter] = useState<LoadFilter>({
         status: null,
         customerId: null,
@@ -75,89 +83,23 @@ const Dashboard: React.FC = () => {
         toDate: null,
         loadType: 'truckload',
         equipmentType: undefined,
-        dateFilterType: ""
+        dateFilterType: "",
+        pageIndex: 1,
+        pageSize: 10
     });
 
-    const [leaderboardFilter, setLeaderboardFilter] = useState<LeaderboardFilter>({
-        type: "",
-        dateFilterType: ""
-    });
-
-    const tableData = useLoads(loadFilter);
+    const { data: tableData, totalCount, loading: tableLoading } = useLoads(loadFilter);
     const { dropdowns } = useDropdowns();
 
-    useEffect(() => {
-        fetchSalesRepLoadData(salesDateRange);
-    }, [salesDateRange]);
-
-    useEffect(() => {
-        fetchOperatorLoadData(operationsDateRange);
-    }, [operationsDateRange]);
-
-    useEffect(() => {
-        fetchOfficeLoadData(officeDateRange);
-    }, [officeDateRange]);
-
-    const fetchSalesRepLoadData = async (dateFilter: string) => {
-        setSalesLoading(true);
-        try {
-            const tempLeaderboardFilter = { ...leaderboardFilter };
-            tempLeaderboardFilter.type = "sales";
-            if (dateFilter) tempLeaderboardFilter.dateFilterType = dateFilter;
-            const { data } = await getLeaderboard(tempLeaderboardFilter);
-            if (data) {
-                setSalesRepLoadData(data);
-            }
-        } catch (error) {
-            console.error("Error fetching dropdowns:", error);
-        } finally {
-            setSalesLoading(false);
-        }
-    };
-    const fetchOperatorLoadData = async (dateFilter: string) => {
-        setOperatorLoading(true);
-        try {
-            const tempLeaderboardFilter = { ...leaderboardFilter };
-            tempLeaderboardFilter.type = "operator";
-            if (dateFilter) tempLeaderboardFilter.dateFilterType = dateFilter;
-            const { data } = await getLeaderboard(tempLeaderboardFilter);
-            if (data) {
-                setOperatorLoadData(data);
-            }
-        } catch (error) {
-            console.error("Error fetching dropdowns:", error);
-        } finally {
-            setOperatorLoading(false);
-        }
-    };
-    const fetchOfficeLoadData = async (dateFilter: string) => {
-        setOfficeLoading(true);
-        try {
-            const tempLeaderboardFilter = { ...leaderboardFilter };
-            tempLeaderboardFilter.type = "office";
-            if (dateFilter) tempLeaderboardFilter.dateFilterType = dateFilter;
-            const { data } = await getOfficeLeaderboard(tempLeaderboardFilter);
-            if (data) {
-                setOfficeLoadData(data);
-            }
-        } catch (error) {
-            console.error("Error fetching dropdowns:", error);
-        } finally {
-            setOfficeLoading(false);
-        }
-    };
-
-    const handleOpenCreateLoadModal = async () => {
-        setIsOpenCreateLoadModal(true);
-    };
-
-    const handleOpenQuickRateModal = async () => {
-        setIsOpenQuickRate(true);
-    };
-
-    const handleOpenCreateQuoteModal = async () => {
-        setIsOpenCreateQuoteModal(true);
-    };
+    const {
+        popoverModal,
+        anchorPos,
+        openPopover,
+        closePopover,
+        globalModal,
+        openModal,
+        closeModal,
+    } = useModalManager();
 
     const handleCreateLoad = async () => {
         console.log("loadCreateFormData : ", loadCreateFormData);
@@ -166,7 +108,7 @@ const Dashboard: React.FC = () => {
             if (response.data != null) {
                 router.push(`/load/edit/${response.data.id}`);
             }
-            setIsOpenCreateLoadModal(false);
+            closeModal();
             toast.success(response.message);
             return response.data;
         } catch (error) {
@@ -176,178 +118,53 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    const handleNameClick = (
-        id: number,
-        e: React.MouseEvent<HTMLSpanElement>
+    const handleEntitySelection = (
+        type: "employee" | "office" | "customer",
+        id: number
     ) => {
-        console.log(id, e);
-        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        setSelectedEmployeeId(id.toString());
-        setIsOpenEmployeeModal(true);
-        setIsOpenCarrierModal(false);
-        setIsOpenCustomerModal(false);
-
-        setAnchorPos({
-            top: rect.top + 6,
-            left: rect.left + rect.width + 6 + window.scrollX,
-        });
+        switch (type) {
+            case "employee":
+                setSelectedEmployeeId(String(id));
+                break;
+            case "office":
+                setSelectedOfficeId(String(id));
+                break;
+            case "customer":
+                setSelectedCustomerId(String(id));
+                break;
+        }
     };
-
-    const handleCarrierClick = (id: string, e: React.MouseEvent<HTMLElement>) => {
-        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        setSelectedCarrierId(id);
-        setIsOpenCarrierModal(true);
-        setIsOpenEmployeeModal(false);
-        setIsOpenCustomerModal(false);
-
-        setAnchorPos({
-            top: rect.top + 6,
-            left: rect.left + rect.width + 6 + window.scrollX,
-        });
-    };
-
-    const handleCustomerClick = (id: string, e: React.MouseEvent<HTMLElement>) => {
-        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        setSelectedCustomerId(id);
-        setIsOpenCustomerModal(true);
-        setIsOpenCarrierModal(false);
-        setIsOpenEmployeeModal(false);
-
-        setAnchorPos({
-            top: rect.top + 6,
-            left: rect.left + rect.width + 6 + window.scrollX,
-        });
-    };
-
-    const handleEmployeeClick = (id: string, e: React.MouseEvent<HTMLElement>) => {
-        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-        setSelectedEmployeeId(id);
-        setIsOpenEmployeeModal(true);
-        setIsOpenCarrierModal(false);
-        setIsOpenCustomerModal(false);
-
-        setAnchorPos({
-            top: rect.top + 6,
-            left: rect.left + rect.width + 6 + window.scrollX,
-        });
-    };
-
-
-
-    const salesLoadTop5 = salesRepLoadData.filter((x) => x.rank <= 5);
-    const operationsLoadTop5 = operatorLoadData.filter((x) => x.rank <= 5);
-    const oficesLoadTop5 = officeLoadData.filter((x) => x.rank <= 5);
 
     return (
         <div className="rounded-md">
             <div className="">
-                <div className="p-2.5 rounded-lg bg-segment-bg mb-2">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                        <div className="relative">
-                            {salesLoading && <div className="absolute inset-0 bg-bg opacity-70 flex items-center justify-center z-10"><span className="text-sm font-medium">Loading...</span></div>}
-                            <LeaderboardTable
-                                data={salesRepLoadData}
-                                title="Sales Leaderboard"
-                                dateRange={salesDateRange}
-                                onDateRangeChange={setSalesDateRange}
-                                dateRangeOptions={dropdowns.dateRange}
-                                onNameClick={handleNameClick}
-                                containerHeight={220}
-                            />
-                        </div>
-                        <div className="relative">
-                            {operatorLoading && <div className="absolute inset-0 bg-bg opacity-70 flex items-center justify-center z-10"><span className="text-sm font-medium">Loading...</span></div>}
-                            <LeaderboardTable
-                                data={operatorLoadData}
-                                title="Operations Leaderboard"
-                                dateRange={operationsDateRange}
-                                onDateRangeChange={setOperationsDateRange}
-                                dateRangeOptions={dropdowns.dateRange}
-                                onNameClick={handleNameClick}
-                                containerHeight={220}
-                            />
-                        </div>
-                        <div className="relative">
-                            {officeLoading && <div className="absolute inset-0 bg-bg opacity-70 flex items-center justify-center z-10"><span className="text-sm font-medium">Loading...</span></div>}
-                            <LeaderboardTable
-                                data={officeLoadData}
-                                title="Office Leaderboard"
-                                dateRange={officeDateRange}
-                                onDateRangeChange={setOfficeDateRange}
-                                dateRangeOptions={dropdowns.dateRange}
-                                isOffice={true}
-                                onNameClick={handleNameClick}
-                                containerHeight={220}
-                            />
-                        </div>
-                    </div>
-                </div>
+                <LeaderboardSection
+                    dropdowns={dropdowns}
+                    salesDateRange={salesDateRange}
+                    opsDateRange={operationsDateRange}
+                    officeDateRange={officeDateRange}
+                    onSalesDateChange={setSalesDateRange}
+                    onOpsDateChange={setOperationsDateRange}
+                    onOfficeDateChange={setOfficeDateRange}
+                    openModal={(type, id, e) => {
+                        openPopover(type, e);
+                        handleEntitySelection(type, id);
+                    }}
+                    salesData={sales.data}
+                    opsData={operator.data}
+                    officeData={office.data}
+                    loading={leaderboardLoading}
+                />
 
                 {/*  Charts */}
-                <div className="p-2.5 rounded-lg bg-segment-bg mb-2">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-                        <div className="relative">
-                            {salesLoading && <div className="absolute inset-0 bg-bg opacity-70 flex items-center justify-center z-10"><span className="text-sm font-medium">Loading...</span></div>}
-                            <DynamicBarChart
-                                title="Sales Leaderboard"
-                                data={salesLoadTop5}
-                                nameKey="fullName"
-                                containerHeight={250}
-                                onNameClick={handleNameClick}
-                                bars={[
-                                    {
-                                        key: 'revenue',
-                                        label: 'Revenue',
-                                        color: 'var(--color-primary)',
-                                    },
-                                    {
-                                        key: 'grossMargin',
-                                        label: 'Gross Margin ($)',
-                                        color: 'var(--color-secondary-hover)',
-                                    },
-                                ]}
-                            />
-                        </div>
-                        <div className="relative">
-                            {operatorLoading && <div className="absolute inset-0 bg-bg opacity-70 flex items-center justify-center z-10"><span className="text-sm font-medium">Loading...</span></div>}
-                            <DynamicBarChart
-                                title="Operations Leaderboard"
-                                data={operationsLoadTop5}
-                                nameKey="fullName"
-                                containerHeight={250}
-                                onNameClick={handleNameClick}
-                                bars={[
-                                    {
-                                        key: 'loadCount',
-                                        label: 'Load ct.',
-                                        color: 'var(--color-primary)',
-                                    },
-                                ]}
-                            />
-                        </div>
-                        <div className="relative">
-                            {officeLoading && <div className="absolute inset-0 bg-bg opacity-70 flex items-center justify-center z-10"><span className="text-sm font-medium">Loading...</span></div>}
-                            <DynamicBarChart
-                                title="Office  Leaderboard"
-                                data={oficesLoadTop5}
-                                nameKey="fullName"
-                                containerHeight={250}
-                                bars={[
-                                    {
-                                        key: 'revenue',
-                                        label: 'Revenue',
-                                        color: 'var(--color-primary)',
-                                    },
-                                    {
-                                        key: 'grossMargin',
-                                        label: 'Gross Margin ($)',
-                                        color: 'var(--color-secondary-hover)',
-                                    },
-                                ]}
-                            />
-                        </div>
-                    </div>
-                </div>
+                <LeaderboardChartSection
+                    data={leaderboardData}
+                    loading={leaderboardLoading}
+                    openModal={(type, id, e) => {
+                        openPopover(type, e);
+                        handleEntitySelection(type, id);
+                    }}
+                />
             </div>
 
             {/* Loads Table */}
@@ -402,76 +219,104 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     <div className="flex gap-2 text-[15px]">
-                        <button onClick={handleOpenQuickRateModal} className="btn-secondary">Quick Rate</button>
-                        <button onClick={handleOpenCreateQuoteModal} className="btn-secondary">Create Quote</button>
-                        <button
-                            onClick={handleOpenCreateLoadModal}
-                            className="btn-secondary"
-                        >
-                            Create Load
-                        </button>
-                        <CreateQuoteModal
-                            isOpen={isOpenCreateQuoteModal}
-                            onClose={() => setIsOpenCreateQuoteModal(false)}
-                            headline={'Create Quote'} />
-                        <FormModal
-                            isOpen={isOpenCreateLoadModal}
-                            onClose={() => setIsOpenCreateLoadModal(false)}
-                            headline="Create Load"
-                        >
-                            {/* FORM AS CHILDREN */}
-                            <CreateLoadForm
-                                dropdowns={dropdowns}
-                                setLoadCreateFormData={setLoadCreateFormData}
-                            />
-
-                            {/* ACTION */}
-                            <div className="flex justify-center mt-2">
-                                <button className="btn-primary" onClick={handleCreateLoad}>
-                                    Create
-                                </button>
-                            </div>
-                        </FormModal>
+                        <button onClick={() => openModal("quickRate")} className="btn-secondary">Quick Rate</button>
+                        <button onClick={() => openModal("quote")} className="btn-secondary">Create Quote</button>
+                        <button onClick={() => openModal("load")} className="btn-secondary">Create Load</button>
                     </div>
                 </div>
 
                 <LoadTable
                     tableData={tableData}
                     activeLoadTypeTab={activeLoadTypeTab}
-                    handleCarrierClick={handleCarrierClick}
-                    handleCustomerClick={handleCustomerClick}
-                    handleEmployeeClick={handleEmployeeClick}
+                    handleCarrierClick={(id, e) => {
+                        setSelectedCarrierId(String(id));
+                        openPopover("carrier", e);
+                    }}
+                    handleCustomerClick={(id, e) => {
+                        setSelectedCustomerId(String(id));
+                        openPopover("customer", e);
+                    }}
+                    handleEmployeeClick={(id, e) => {
+                        setSelectedEmployeeId(String(id));
+                        openPopover("employee", e);
+                    }}
+                    totalCount={totalCount}
+                    currentPage={loadFilter.pageIndex || 1}
+                    itemsPerPage={loadFilter.pageSize || 10}
+                    loading={tableLoading}
+                    onPageChange={(page) => setLoadFilter({ ...loadFilter, pageIndex: page })}
+                    onItemsPerPageChange={(count) => setLoadFilter({ ...loadFilter, pageSize: count, pageIndex: 1 })}
                 />
-
             </div>
 
-            {anchorPos && (
-                <>
-                    <EmployeeModal
-                        id={selectedEmployeeId}
-                        isOpen={isOpenEmployeeModal}
-                        position={anchorPos}
-                        onClose={() => setIsOpenEmployeeModal(false)}
-                    />
-                    <CarrierModal
-                        id={selectedCarrierId}
-                        isOpen={isOpenCarrierModal}
-                        position={anchorPos}
-                        onClose={() => setIsOpenCarrierModal(false)}
-                    />
-                    <CustomerModal
-                        id={selectedCustomerId}
-                        isOpen={isOpenCustomerModal}
-                        position={anchorPos}
-                        onClose={() => setIsOpenCustomerModal(false)}
-                    />
-                </>
+
+            {popoverModal === "employee" && anchorPos && (
+                <EmployeeModal
+                    id={selectedEmployeeId}
+                    isOpen={true}
+                    position={anchorPos}
+                    onClose={closePopover}
+                />
             )}
 
-            {isOpenQuickRate &&
+            {popoverModal === "carrier" && anchorPos && (
+                <CarrierModal
+                    id={selectedCarrierId}
+                    isOpen={true}
+                    position={anchorPos}
+                    onClose={closePopover}
+                />
+            )}
+
+            {popoverModal === "customer" && anchorPos && (
+                <CustomerModal
+                    id={selectedCustomerId}
+                    isOpen={true}
+                    position={anchorPos}
+                    onClose={closePopover}
+                />
+            )}
+
+            {popoverModal === "office" && anchorPos && (
+                <OfficeModal
+                    id={selectedOfficeId}
+                    isOpen={true}
+                    position={anchorPos}
+                    onClose={closePopover}
+                />
+            )}
+
+            {globalModal === "quickRate" && (
                 <QuickRateModal
-                    isOpen={isOpenQuickRate}
-                    onClose={() => setIsOpenQuickRate(false)} />}
+                    isOpen={true}
+                    onClose={closeModal}
+                />
+            )}
+
+            {globalModal === "quote" && (
+                <CreateQuoteModal
+                    isOpen={true}
+                    onClose={closeModal}
+                    headline="Create Quote"
+                />
+            )}
+
+            {globalModal === "load" && (
+                <FormModal
+                    isOpen={true}
+                    onClose={closeModal}
+                    headline="Create Load"
+                >
+                    <CreateLoadForm
+                        dropdowns={dropdowns}
+                        setLoadCreateFormData={setLoadCreateFormData}
+                    />
+
+                    <div className="flex justify-center mt-2">
+                        <button className="btn-primary" onClick={handleCreateLoad}> Create </button>
+                    </div>
+                </FormModal>
+            )}
         </div>
     );
 };

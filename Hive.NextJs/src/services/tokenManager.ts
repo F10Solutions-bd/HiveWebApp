@@ -15,10 +15,7 @@ export async function getAccessToken(): Promise<string | null> {
             {},
             {
                 withCredentials: true,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'DPoP': dpopProof || ''
-                },
+                headers: { 'DPoP': dpopProof || '' }
             }
         );
 

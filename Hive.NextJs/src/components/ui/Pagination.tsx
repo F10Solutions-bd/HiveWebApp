@@ -52,12 +52,15 @@ const Pagination: React.FC<PaginationProps> = ({
                                     </span>
                                 )}
                                 <button
-                                    onClick={() => onPageChange(page)}
-                                    className={`px-3 py-1 border rounded-md ${
-                                        currentPage === page
-                                            ? 'bg-[#008ca8] text-white'
-                                            : 'hover:bg-gray-50'
-                                    }`}
+                                    onClick={() => {
+                                        if (currentPage !== page) {
+                                            onPageChange(page);
+                                        }
+                                    }}
+                                    className={`px-3 py-1 border rounded-md ${currentPage === page
+                                        ? 'bg-[#008ca8] text-white'
+                                        : 'hover:bg-gray-50'
+                                        }`}
                                 >
                                     {page}
                                 </button>
@@ -84,7 +87,7 @@ const Pagination: React.FC<PaginationProps> = ({
                         onChange={(e) =>
                             onItemsPerPageChange(Number(e.target.value))
                         }
-                        className="px-2 py-1 border rounded-md"
+                        className="px-2  w-16"
                     >
                         {pageSizeOptions.map((size) => (
                             <option key={size} value={size}>

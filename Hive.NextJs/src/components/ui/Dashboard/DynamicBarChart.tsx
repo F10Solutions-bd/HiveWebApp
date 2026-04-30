@@ -25,6 +25,43 @@ interface DynamicBarChartProps<T> {
     containerHeight?: number;
     tickCount?: number;
     onNameClick?: (id: number, e: React.MouseEvent<HTMLElement>) => void;
+    loading?: boolean;
+}
+
+/**
+ * Calculates a "nice" rounded maximum value for chart scaling.
+ *
+ * Instead of using the raw max (which can produce awkward steps like 5.75 or 6.33),
+ * this function normalizes the scale to clean, human-friendly intervals (e.g., 1, 2, 5, 10, 20…).
+ *
+ * How it works:
+ * 1. Divides the max value by tickCount to get a rough step size.
+ * 2. Determines the magnitude (nearest lower power of 10) of that step.
+ * 3. Rounds the step up to the nearest multiple of that magnitude.
+ * 4. Multiplies back by tickCount to get a clean, evenly divisible max value.
+ *
+ * Result:
+ * - Produces integer-based Y-axis labels (no fractions)
+ * - Ensures consistent spacing between ticks
+ * - Helps bars align perfectly with grid lines (avoids visual gaps)
+ *
+ * Example:
+ * value = 23, tickCount = 4 → max = 24 (steps: 0, 6, 12, 18, 24)
+ * value = 26, tickCount = 4 → max = 28 (steps: 0, 7, 14, 21, 28)
+ */
+
+// function getNiceMax(value: number, tickCount: number) {
+//     const roughStep = value / tickCount;
+//     const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+//     const niceStep = Math.ceil(roughStep / magnitude) * magnitude;
+//     return niceStep * tickCount;
+//     // const step = Math.ceil(value / tickCount);
+//     // return step * tickCount;
+// }
+function getNiceMax(value: number, tickCount: number) {
+    const padded = value * 1.02; // 2% padding
+    const step = Math.ceil(padded / tickCount);
+    return step * tickCount;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,12 +74,13 @@ export function DynamicBarChart<T extends Record<string, any>>({
     containerHeight = 350,
     tickCount = 4,
     onNameClick,
+    loading,
 }: DynamicBarChartProps<T>) {
     const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
     //const height = Math.max(containerHeight - 100, 50);
     const height = 160;
-
+    tickCount = Math.max(1, tickCount);
     const maxHight =
         maxValue ??
         Math.max(
@@ -51,11 +89,13 @@ export function DynamicBarChart<T extends Record<string, any>>({
             )
         );
 
-    const calculatedMax = maxHight || 1;
+    const calculatedMax = getNiceMax(maxHight || 1, tickCount);
+    const step = calculatedMax / tickCount;
 
     const yAxisLabels = Array.from({ length: tickCount + 1 }, (_, i) =>
-        Math.round((calculatedMax / tickCount) * (tickCount - i))
+        step * (tickCount - i)
     );
+
 
     const isCentered = data.length <= 2;
 
@@ -63,22 +103,12 @@ export function DynamicBarChart<T extends Record<string, any>>({
         ? { width: "120px" }
         : { flex: 1 };
 
-    if (!data.length) {
-        return (
-            <div className="bg-bg p-4 rounded-lg text-center flex flex-col" style={{ height: `${containerHeight}px` }}>
-                <h1 className="text-lg font-semibold mb-2 text-fg">{title}</h1>
-                <div className="flex-1 flex items-center justify-center text-sm text-fg">
-                    No data available
-                </div>
-            </div>
-        );
-    }
+    const isEmpty = !data.length;
 
     return (
-        <div className="bg-bg p-2 rounded-lg font-normal text-[12px] flex flex-col overflow-hidden" style={{ height: `${containerHeight}px` }}>
+        <div className="bg-bg p-2 rounded-lg font-normal text-[12px] flex flex-col overflow-hidden relative" style={{ height: `${containerHeight}px` }}>
             <h1 className="text-lg font-semibold text-center mb-0 shrink-0 text-fg">{title}</h1>
 
-            {/* Legend */}
             <div className="flex items-center justify-center gap-6 mb-2 text-sm">
                 {bars.map(bar => (
                     <div key={bar.label} className="flex items-center gap-2">
@@ -90,8 +120,15 @@ export function DynamicBarChart<T extends Record<string, any>>({
                     </div>
                 ))}
             </div>
-
-            <div className="relative" style={{ paddingLeft: "45px" }}>
+            {loading ? (
+                <div className="flex-1 flex items-center justify-center text-sm text-fg">
+                    <span className="text-sm font-medium">Loading...</span>
+                </div>
+            ) : isEmpty ? (
+                <div className="flex-1 flex items-center justify-center text-sm text-fg">
+                    No data available
+                </div>
+            ) : <div className="relative" style={{ paddingLeft: "45px" }}>
                 {/* Y Axis */}
 
                 <div className="absolute left-0 top-0 h-full w-[40px]">
@@ -105,6 +142,7 @@ export function DynamicBarChart<T extends Record<string, any>>({
                                 style={{ top: `${y}px` }}
                             >
                                 {value}
+                                {/*{Number.isFinite(value) ? value : "N/A"}*/}
                             </div>
                         );
                     })}
@@ -114,17 +152,15 @@ export function DynamicBarChart<T extends Record<string, any>>({
                 <div className="relative" style={{ height }}>
                     {/* Grid lines */}
                     <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                        {yAxisLabels.map((_, i) => (
-                            <line
-                                key={i}
-                                x1="0"
-                                y1={(height / tickCount) * i}
-                                x2="100%"
-                                y2={(height / tickCount) * i}
-                                stroke="#e5e7eb"
-                                strokeWidth="1"
-                            />
-                        ))}
+                        {yAxisLabels.map((_, i) => (<line
+                            key={i}
+                            x1="0"
+                            y1={(height / tickCount) * i}
+                            x2="100%"
+                            y2={(height / tickCount) * i}
+                            stroke="#e5e7eb"
+                            strokeWidth="1"
+                        />))}
                     </svg>
 
                     {/* Bars */}
@@ -133,21 +169,20 @@ export function DynamicBarChart<T extends Record<string, any>>({
                             <div
                                 key={index}
                                 className={`flex items-end gap-1 ${isCentered ? "" : "flex-1"}`}
-                                style={columnStyle}
-                            >
+                                style={columnStyle} >
                                 {bars.map(bar => {
                                     const value = Number(item[bar.key]) || 0;
                                     const barHeight = (value / calculatedMax) * height;
+                                    //const barHeight = Math.round((value / calculatedMax) * height);
                                     let maxWidth = 60;
-                                    console.log(data.length);
+
                                     if (data.length > 3) {
                                         maxWidth = 100;
                                     }
                                     const barWidth = (maxWidth / bars.length) + '%';
 
                                     return (
-                                        <div
-                                            key={bar.label}
+                                        <div key={bar.label}
                                             className="rounded-t cursor-pointer hover:opacity-80 transition-opacity"
                                             style={{
                                                 height: `${barHeight}px`,
@@ -174,9 +209,7 @@ export function DynamicBarChart<T extends Record<string, any>>({
                 </div>
 
                 {/* X Axis */}
-                <div
-                    className={`flex gap-3 mt-1 ${isCentered ? "justify-center" : ""}`}
-                >
+                <div className={`flex gap-3 mt-1 ${isCentered ? "justify-center" : ""}`}>
                     {data.map((item, index) => {
                         const name = item[nameKey];
                         const displayName = name.length > 12 ? name.slice(0, 11) + ".." : name;
@@ -193,7 +226,8 @@ export function DynamicBarChart<T extends Record<string, any>>({
                         );
                     })}
                 </div>
-            </div>
+
+            </div>}
 
             {/* Tooltip */}
             {tooltip && (

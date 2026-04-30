@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { loadStausTableMap } from '@/features/load/constants';
 import { toDisplayDateString } from '@/utils/dateHelper';
 import { getStatusColor } from '@/features/dashboard/constants';
+import Pagination from '@/components/ui/Pagination';
 
 type Props = {
     tableData: any[];
@@ -13,6 +14,12 @@ type Props = {
     handleCarrierClick: (id: string, e: React.MouseEvent<HTMLElement>) => void;
     handleCustomerClick: (id: string, e: React.MouseEvent<HTMLElement>) => void;
     handleEmployeeClick: (id: string, e: React.MouseEvent<HTMLElement>) => void;
+    totalCount: number;
+    currentPage: number;
+    itemsPerPage: number;
+    loading: boolean;
+    onPageChange: (page: number) => void;
+    onItemsPerPageChange: (count: number) => void;
 };
 
 const LoadTable: React.FC<Props> = ({
@@ -21,6 +28,12 @@ const LoadTable: React.FC<Props> = ({
     handleCarrierClick,
     handleCustomerClick,
     handleEmployeeClick,
+    totalCount,
+    currentPage,
+    itemsPerPage,
+    loading,
+    onPageChange,
+    onItemsPerPageChange,
 }) => {
     const router = useRouter();
 
@@ -87,58 +100,85 @@ const LoadTable: React.FC<Props> = ({
                     </thead>
 
                     <tbody className="bg-white">
-                        {tableData.map((load: any) => (
-                            <tr key={load.id} className="hover:bg-gray-50">
-                                <td className="!text-center">
-                                    <span className={`inline-flex px-3 py-1 w-20 items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ${getStatusColor(load.status)}`}>
-                                        {loadStausTableMap[load?.status || ""]}
-                                    </span>
-                                </td>
-                                <td
-                                    className="!text-primary font-medium"
-                                >
-                                    <span onClick={() => router.push(`/load/edit/${load.id}`)} className=' cursor-pointer border-b border-primary'>{String(load.id).padStart(6, '0')}</span>
-                                </td>
-                                {/* <td className="">{toDisplayDateString(load.pickups?.[0]?.pickupDate)}</td> */}
-                                {activeLoadTypeTab == "truckload" && (
-                                    <td className="">{toDisplayDateString(load.pickups?.[0]?.pickupDate)}</td>
-                                )}
-                                {activeLoadTypeTab != "truckload" && (
-                                    <td className="">{toDisplayDateString(load.pickups?.[0]?.erd)}</td>
-                                )}
-                                <td className="">{load.pickups?.[0]?.city}</td>
-                                <td className="">{load.pickups?.[0]?.state}</td>
-                                <td className="">{load.deliveries?.[0]?.city}</td>
-                                <td className="">{load.deliveries?.[0]?.state}</td>
-                                <td className="">{toDisplayDateString(load.deliveries?.[0]?.deliveryDate)}</td>
-                                <td
-                                    className="!text-primary font-medium"
-                                >
-                                    <span onClick={(e) => handleCarrierClick(String(load.carriers?.[0]?.id), e)} className='cursor-pointer border-b border-primary'>{load.carriers?.[0]?.name}</span>
-                                </td>
-                                <td
-                                    className="!text-primary font-medium"
-                                >
-                                    <span onClick={(e) => handleCustomerClick(String(load.customerId), e)} className='cursor-pointer border-b border-primary'>{load.customerName}</span>
-                                </td>
-                                <td className="">{load.po}</td>
-                                <td className="">{load.equipmentType}</td>
-                                {activeLoadTypeTab != "truckload" && (
-                                    <td className="">{load.container}</td>
-                                )}
-                                <td className="font-medium text-fg">${load.billed?.toLocaleString() || 0}</td>
-                                <td className="">${load.cost?.toLocaleString() || 0}</td>
-                                <td className="font-medium text-success">${load.margin?.toLocaleString() || 0}</td>
-                                <td
-                                    className="!text-primary font-medium"
-                                >
-                                    <span onClick={(e) => handleEmployeeClick(String(load.salesRepId), e)} className='cursor-pointer border-b border-primary'>{load.salesRepName}</span>
+                        {loading ? (
+                            <tr>
+                                <td colSpan={17} className="py-10 !text-center ">
+                                    Loading...
                                 </td>
                             </tr>
-                        ))}
+                        ) : tableData.length === 0 ? (
+                            <tr>
+                                <td colSpan={17} className="py-10 !text-center ">
+                                    No data available
+                                </td>
+                            </tr>
+                        ) : (
+                            tableData.map((load: any) => (
+                                <tr key={load.id} className="hover:bg-gray-50">
+                                    <td className="!text-center">
+                                        <span className={`inline-flex px-3 py-1 w-20 items-center justify-center whitespace-nowrap rounded-md text-xs font-medium ${getStatusColor(load.status)}`}>
+                                            {loadStausTableMap[load?.status || ""]}
+                                        </span>
+                                    </td>
+                                    <td
+                                        className="!text-primary font-medium"
+                                    >
+                                        <span onClick={() => router.push(`/load/edit/${load.id}`)} className=' cursor-pointer border-b border-primary'>{String(load.id).padStart(6, '0')}</span>
+                                    </td>
+                                    {/* <td className="">{toDisplayDateString(load.pickups?.[0]?.pickupDate)}</td> */}
+                                    {activeLoadTypeTab == "truckload" && (
+                                        <td className="">{toDisplayDateString(load.pickups?.[0]?.pickupDate)}</td>
+                                    )}
+                                    {activeLoadTypeTab != "truckload" && (
+                                        <td className="">{toDisplayDateString(load.pickups?.[0]?.erd)}</td>
+                                    )}
+                                    <td className="">{load.pickups?.[0]?.city}</td>
+                                    <td className="">{load.pickups?.[0]?.state}</td>
+                                    <td className="">{load.deliveries?.[0]?.city}</td>
+                                    <td className="">{load.deliveries?.[0]?.state}</td>
+                                    <td className="">{toDisplayDateString(load.deliveries?.[0]?.deliveryDate)}</td>
+                                    <td
+                                        className="!text-primary font-medium"
+                                    >
+                                        <span onClick={(e) => handleCarrierClick(String(load.carriers?.[0]?.id), e)} className='cursor-pointer border-b border-primary'>{load.carriers?.[0]?.name}</span>
+                                    </td>
+                                    <td
+                                        className="!text-primary font-medium"
+                                    >
+                                        <span onClick={(e) => handleCustomerClick(String(load.customerId), e)} className='cursor-pointer border-b border-primary'>{load.customerName}</span>
+                                    </td>
+                                    <td className="">{load.po}</td>
+                                    <td className="">{load.equipmentType}</td>
+                                    {activeLoadTypeTab != "truckload" && (
+                                        <td className="">{load.container}</td>
+                                    )}
+                                    <td className="font-medium text-fg">${load.billed?.toLocaleString() || 0}</td>
+                                    <td className="">${load.cost?.toLocaleString() || 0}</td>
+                                    <td className="font-medium text-success">${load.margin?.toLocaleString() || 0}</td>
+                                    <td
+                                        className="!text-primary font-medium"
+                                    >
+                                        <span onClick={(e) => handleEmployeeClick(String(load.salesRepId), e)} className='cursor-pointer border-b border-primary'>{load.salesRepName}</span>
+                                    </td>
+                                </tr>
+                            )))}
                     </tbody>
                 </table>
             </div>
+
+            {!loading && totalCount > 0 && (
+                <div className="mt-4">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={Math.ceil(totalCount / itemsPerPage)}
+                        itemsPerPage={itemsPerPage}
+                        totalItems={totalCount}
+                        onPageChange={onPageChange}
+                        onItemsPerPageChange={onItemsPerPageChange}
+                        pageSizeOptions={[10, 15, 20, 50]}
+                    />
+                </div>
+            )}
         </div>
     );
 };

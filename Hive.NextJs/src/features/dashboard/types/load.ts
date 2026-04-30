@@ -16,4 +16,6 @@ export type LoadFilter = {
     loadType?: string;
     equipmentType?: string;
     dateFilterType?: string;
+    pageIndex?: number;
+    pageSize?: number;
 };

@@ -1,3 +1,5 @@
+
+export type LeaderboardType = "sales" | "operator" | "office";
 export interface LeaderboardItem {
     id: number;
     fullName: string;
@@ -6,19 +8,10 @@ export interface LeaderboardItem {
     revenue: number;
     grossMargin: number;
     grossMarginPercent: number;
+    type?: LeaderboardType;
 }
 
 export type LeaderboardFilter = {
-    type?: string | null;
+    type?: LeaderboardType | null;
     dateFilterType?: string;
 };
-
-export interface OfficeLeaderboardItem {
-    id: number;
-    fullName: string;
-    rank: number;
-    loadCount: number;
-    revenue: number;
-    grossMargin: number;
-    grossMarginPercent: number;
-}

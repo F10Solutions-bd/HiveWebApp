@@ -4,8 +4,11 @@ import { useState } from 'react';
 import { QuickRateFormData, QuickRateProps } from '../../types';
 import { criteria } from '../../constants';
 import { useEquipmentOptions } from '../../hooks/useEquipmentOptions';
+import { quickRateSchema } from '../../schema/quickRate.schema';
+import { validateWithZod } from '@/lib/validateWithZod';
 
 export default function QuickRateModal({ isOpen, onClose }: QuickRateProps) {
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const equipmentOptions = useEquipmentOptions(isOpen);
   const handleClose = () => onClose();
   const criteriaOptions = criteria;
@@ -19,11 +22,20 @@ export default function QuickRateModal({ isOpen, onClose }: QuickRateProps) {
     deliveryRadius: '',
   });
 
-  if (!isOpen) return null;
+  const validate = () => {
+    const result = validateWithZod(quickRateSchema, formData);
+    setErrors(result.errors);
+    return result.success;
+  };
+
   const handleGenerate = () => {
+    const isValid = validate();
+    if (!isValid) return;
     console.log(formData);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/10 flex items-center justify-center z-70 2xl:!text-[20px]">
@@ -47,73 +59,103 @@ export default function QuickRateModal({ isOpen, onClose }: QuickRateProps) {
             <div className='flex flex-col gap-5 w-full lg:max-w-1/2'>
 
               {/* Equipment */}
-              <div className='flex flex-col lg:flex-row items-center gap-2'>
-                <div className='2xl:!font-normal'>
-                  <span className="text-danger mr-1">*</span>
-                  Equipment:
+              <div className="flex flex-col w-full">
+                <div className='flex flex-col lg:flex-row items-center gap-2'>
+                  <div className='2xl:!font-normal'>
+                    <span className="text-danger mr-1">*</span>
+                    Equipment:
+                  </div>
+                  <div className='flex flex-col w-full gap-2'>
+                    <Select
+                      options={equipmentOptions}
+                      value={formData.equipment}
+                      placeholder="Type"
+                      className="border-secondary !w-full"
+                      parentClassName='!w-full'
+                      onSelect={(val: string) =>
+                        setFormData({ ...formData, equipment: val })
+                      }
+                    />
+                    {errors.equipment && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.equipment}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <Select
-                  options={equipmentOptions}
-                  value={formData.equipment}
-                  placeholder="Type"
-                  className="border-secondary !py-3 !w-full"
-                  parentClassName='!w-full'
-                  dropdownWidth=""
-                  onSelect={(val: string) =>
-                    setFormData({ ...formData, equipment: val })
-                  }
-                />
               </div>
 
               {/* Criteria */}
-              <div className='flex flex-col lg:flex-row lg:pl-9 xl:!justify-center 2xl:!justify-end items-center gap-2'>
-                <div className='2xl:!font-normal'>
-                  <span className="text-danger mr-1">*</span>
-                  Criteria:
+              <div className="flex flex-col w-full lg:pl-9">
+                <div className='flex flex-col lg:flex-row items-center gap-2'>
+                  <div className='2xl:!font-normal'>
+                    <span className="text-danger mr-1">*</span>
+                    Criteria:
+                  </div>
+
+                  <div className='flex flex-col w-full gap-2'>
+                    <Select
+                      options={criteriaOptions}
+                      value={formData.criteria}
+                      placeholder="zip/city/state"
+                      className="border-secondary !w-full"
+                      parentClassName='!w-full'
+                      onSelect={(val: string) =>
+                        setFormData({ ...formData, criteria: val })
+                      }
+                    />
+                    {errors.criteria && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.criteria}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <Select
-                  options={criteriaOptions}
-                  value={formData.criteria}
-                  placeholder="zip/city/state"
-                  className="border-secondary !py-3 !w-full"
-                  parentClassName='!w-full'
-                  dropdownWidth=""
-                  onSelect={(val: string) =>
-                    setFormData({ ...formData, criteria: val })
-                  }
-                />
               </div>
 
               <div className='flex flex-col md:flex-row gap-4'>
-
                 {/* Pickup */}
                 <div className='flex flex-col gap-3 w-full'>
                   <div className='text-center mt-2 lg:mt-5'>Pickup:</div>
 
                   <div className='flex items-center'>
                     <span className="text-danger mr-1">*</span>
-                    <input
-                      type="text"
-                      placeholder="zip/city/state"
-                      className="flex-1 p-2 border rounded "
-                      value={formData.pickupLocation}
-                      onChange={(e) =>
-                        setFormData({ ...formData, pickupLocation: e.target.value })
-                      }
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="zip/city/state"
+                        className="flex-1 border rounded w-full"
+                        value={formData.pickupLocation}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pickupLocation: e.target.value })
+                        }
+                      />
+                      {errors.pickupLocation && (
+                        <p className="text-red-500 text-sm !ml-2">
+                          {errors.pickupLocation}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className='flex'>
                     <span className="text-danger mr-1">*</span>
-                    <input
-                      type="text"
-                      placeholder="Within 25 ml"
-                      className="flex-1 w-full p-2 border rounded"
-                      value={formData.pickupRadius}
-                      onChange={(e) =>
-                        setFormData({ ...formData, pickupRadius: e.target.value })
-                      }
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Within 25 ml"
+                        className="flex-1 w-full p-2 border rounded"
+                        value={formData.pickupRadius}
+                        onChange={(e) =>
+                          setFormData({ ...formData, pickupRadius: e.target.value })
+                        }
+                      />
+                      {errors.pickupRadius && (
+                        <p className="text-red-500 text-sm !ml-2">
+                          {errors.pickupRadius}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -127,34 +169,47 @@ export default function QuickRateModal({ isOpen, onClose }: QuickRateProps) {
 
                   <div className='flex'>
                     <span className="text-danger mr-1">*</span>
-                    <input
-                      type="text"
-                      placeholder="zip/city/state"
-                      className="flex-1 w-full p-2 border rounded"
-                      value={formData.deliveryLocation}
-                      onChange={(e) =>
-                        setFormData({ ...formData, deliveryLocation: e.target.value })
-                      }
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="zip/city/state"
+                        className="flex-1 w-full p-2 border rounded"
+                        value={formData.deliveryLocation}
+                        onChange={(e) =>
+                          setFormData({ ...formData, deliveryLocation: e.target.value })
+                        }
+                      />{errors.deliveryLocation && (
+                        <p className="text-red-500 text-sm !ml-2">
+                          {errors.deliveryLocation}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className='flex'>
                     <span className="text-danger mr-1">*</span>
-                    <input
-                      type="text"
-                      placeholder="Within 25 ml"
-                      className="flex-1 w-full p-2 border rounded"
-                      value={formData.deliveryRadius}
-                      onChange={(e) =>
-                        setFormData({ ...formData, deliveryRadius: e.target.value })
-                      }
-                    />
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Within 25 ml"
+                        className="flex-1 w-full p-2 border rounded"
+                        value={formData.deliveryRadius}
+                        onChange={(e) =>
+                          setFormData({ ...formData, deliveryRadius: e.target.value })
+                        }
+                      />
+                      {errors.deliveryRadius && (
+                        <p className="text-red-500 text-sm !ml-2">
+                          {errors.deliveryRadius}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
               </div>
-            </div>
 
+            </div>
             {/*   Right Section */}
             <div className='mt-2 w-full lg:w-1/2 lg:ml-20'>
               <div className='text-center text-xl text-primary mb-3'>
@@ -170,12 +225,12 @@ export default function QuickRateModal({ isOpen, onClose }: QuickRateProps) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-10">
-                  <span className='ml-16'>DAT: $</span>
+                  <span className='ml-22'>DAT: $</span>
                   <span>RPM: $</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-10">
-                  <span className='ml-5'>Truckstop: $</span>
+                  <span className='ml-6'>Truckstop: $</span>
                   <span>RPM: $</span>
                 </div>
               </div>
@@ -189,7 +244,6 @@ export default function QuickRateModal({ isOpen, onClose }: QuickRateProps) {
 
           {/* Button */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-8">
-
             <div></div>
 
             <div className="flex gap-3 mx-auto">
@@ -212,7 +266,6 @@ export default function QuickRateModal({ isOpen, onClose }: QuickRateProps) {
                 Go To Tool
               </button>
             </div>
-
           </div>
         </div>
       </div>

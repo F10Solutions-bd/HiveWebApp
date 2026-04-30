@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import api from '@/services/apiClient';
-import { LeaderboardItem, OfficeLeaderboardItem, LoadFilter, Customer } from '../types';
+import { LeaderboardItem, LoadFilter, Customer, Office } from '../types';
 import { SelectOption } from '@/types/common';
 
 export const getLoads = (params: LoadFilter) =>
@@ -12,7 +12,7 @@ export const getLeaderboard = (params: any) =>
     api.get<LeaderboardItem[]>("/dashboards/leaderboard", { params });
 
 export const getOfficeLeaderboard = (params: any) =>
-    api.get<OfficeLeaderboardItem[]>("/dashboards/leaderboard", { params });
+    api.get<LeaderboardItem[]>("/dashboards/leaderboard", { params });
 
 export const getCustomers = () =>
     api.get<Customer[]>("/customers");
@@ -22,3 +22,6 @@ export const getLoadTypes = () =>
 
 export const getSalesReps = () =>
     api.get<SelectOption[]>("/users/sales-representative");
+
+export const getOffice = (id: string) =>
+    api.get<Office>(`/offices/${id}`);

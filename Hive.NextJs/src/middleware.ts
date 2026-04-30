@@ -25,7 +25,7 @@ export async function middleware(req: NextRequest) {
                 headers: {
                     'Content-Type': 'application/json',
                     cookie: cookieHeader,
-                    'x-from-middleware': 'secret-bypass-key'
+                    'x-from-middleware': '8fK9#Lm2@Qx7Zp!4vR6$wT1yN8*Hd5BqJ3sU0eXcA!gM9kPz'
                 },
             });
 
