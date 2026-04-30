@@ -58,6 +58,7 @@ export default function LoginPage() {
                         </label>
                         <input
                             id="username"
+                            className='!ml-0'
                             type="text"
                             placeholder="Login or Emp Id"
                             value={username}
@@ -80,7 +81,7 @@ export default function LoginPage() {
                             value={password}
                             required
                             onChange={(e) => setPassword(e.target.value)}
-                            className="password-input"
+                            className="password-input !ml-0"
                         />
 
                         {password.length > 0 && (
