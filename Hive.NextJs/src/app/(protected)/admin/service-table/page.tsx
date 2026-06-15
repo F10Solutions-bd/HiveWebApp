@@ -158,7 +158,6 @@ export default function ServiceTablePage() {
                 onClose={() => setShowFormModal(false)}
                 title="Create Service Table"
                 onSave={handleCreate}
-                size="lg"
                 actionType="create"
             >
                 <div className="mb-3 items-center">

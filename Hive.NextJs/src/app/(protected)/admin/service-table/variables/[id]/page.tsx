@@ -327,7 +327,6 @@ export default function ServiceTableVariablesPage() {
                 onClose={() => setShowFormModal(false)}
                 title={editingId ? 'Edit Variable' : 'Create Variable'}
                 onSave={handleSave}
-                size="lg"
                 actionType={editingId ? 'edit' : 'create'}
             >
                 <div className="mb-3 items-center">

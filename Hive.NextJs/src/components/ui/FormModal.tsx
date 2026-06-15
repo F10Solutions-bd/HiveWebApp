@@ -9,7 +9,7 @@ interface FormModalProps {
     title: string;
     children: ReactNode;
     onSave: () => void;
-    // size?: 'sm' | 'md' | 'lg' | '2lg';
+    size?: 'sm' | 'md' | 'lg' | '2lg';
     actionType: string;
 }
 
@@ -19,7 +19,7 @@ export default function FormModal({
     title,
     children,
     onSave,
-    // size = 'md',
+    size = 'md',
     actionType,
 }: FormModalProps) {
     if (!isOpen) return null;

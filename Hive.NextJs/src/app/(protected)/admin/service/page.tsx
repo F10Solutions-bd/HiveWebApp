@@ -165,7 +165,6 @@ export default function SystemListPage() {
                 onClose={() => setShowFormModal(false)}
                 title={isEditing ? 'Update System' : 'Create System'}
                 onSave={handleSave}
-                size="lg"
                 actionType={isEditing ? 'update' : 'create'}
             >
                 <div className="flex justify-end mb-3">

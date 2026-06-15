@@ -310,7 +310,6 @@ export default function RoleListPage() {
                 onClose={() => setShowFormModal(false)}
                 title={isEditing ? 'Update Role' : 'Create Role'}
                 onSave={handleSave}
-                size="lg"
                 actionType={isEditing ? 'update' : 'create'}
             >
                 <div className="flex flex-col gap-3">

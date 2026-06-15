@@ -148,7 +148,6 @@ export default function ServiceTableDetailsPage() {
                 onClose={() => setIsOpenFormModal(false)}
                 title="Create Variable"
                 onSave={handleSave}
-                size="lg"
                 actionType="create"
             >
                 <div className="mb-3 items-center">

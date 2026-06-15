@@ -273,7 +273,6 @@ export default function ProjectListPage() {
                 onClose={() => setShowFormModal(false)}
                 title={isEditing ? 'Update Project' : 'Create Project'}
                 onSave={handleSave}
-                size="lg"
                 actionType={isEditing ? 'update' : 'create'}
             >
                 <div className="flex justify-center mb-3">

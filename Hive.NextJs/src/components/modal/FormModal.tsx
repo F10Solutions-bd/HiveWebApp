@@ -90,7 +90,7 @@ export default function FormModal({
 
     useEffect(() => {
         if (isOpen) {
-            setLoading(true);
+            //setLoading(true);
 
             // simulate waiting for children/content
             const timer = setTimeout(() => {
