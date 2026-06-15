@@ -86,7 +86,7 @@ export default function Contacts() {
 
     const fetchAllCustomers = async () => {
         try {
-            const customersRes = await api.get<Customer[]>('/customers/all');
+            const customersRes = await api.get<Customer[]>('/hiveCustomers');
             setCustomers(customersRes.data ?? []);
         } catch (err) {
             console.log(err);
@@ -432,17 +432,18 @@ export default function Contacts() {
                 </div>
 
                 {/* Header */}
-                <div
+                {/* <div
                     className="flex items-center gap-3 text-white p-2 rounded font-semibold mb-5"
                     style={{
-                        backgroundColor: '#337ab7',
+                        backgroundColor: "var(--color-primary)",
+                        color: "var(--color-bg)",
                         fontSize: '14px',
                         fontWeight: 500,
                         letterSpacing: '0.3px',
                     }}
                 >
                     <FaSearch size={15} /> SEARCH CUSTOMER INFORMATION
-                </div>
+                </div> */}
 
                 {/* Search & Add */}
                 {/*<div className="flex justify-between items-center mb-3">
@@ -463,13 +464,13 @@ export default function Contacts() {
 
                 </div>*/}
 
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-end items-center mb-3 gap-2">
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search..."
-                        className="border rounded px-3 py-2 w-72 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="p-4 focus:ring-2 focus:ring-primary"
                     />
 
                     {/*<Link href={buttonLink}>*/}
@@ -479,7 +480,7 @@ export default function Contacts() {
                     {/*</Link>*/}
 
                     {activeTab === 'vendors' ||
-                    activeTab === 'vendorContacts' ? (
+                        activeTab === 'vendorContacts' ? (
                         // OPEN POPUP INSTEAD OF NAVIGATION
                         <button
                             onClick={() => {
@@ -489,7 +490,7 @@ export default function Contacts() {
                                     setOpenVendorContactsDialog(true);
                                 }
                             }}
-                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                            className="bg-primary text-white px-4 py-2 rounded hover:bg-green-700"
                         >
                             {buttonText}
                         </button>
@@ -502,8 +503,8 @@ export default function Contacts() {
                         //</Link>
                         <VendorsAndDetailsDynamicButton
                             text={buttonText}
-                            bgColor="bg-green-500"
-                            hoverColor="hover:bg-green-700"
+                            bgColor="bg-primary"
+                            hoverColor="hover:bg-primary-hover"
                             onClick={() => {
                                 router.push(
                                     '/admin/user-contacts/contacts-create-customers'
@@ -583,7 +584,7 @@ export default function Contacts() {
 
                 <div className="overflow-x-auto bg-white rounded-lg shadow mt-6">
                     <table className="w-full text-left border-collapse">
-                        <thead className="bg-[#337ab7] text-white">
+                        <thead className="bg-primary text-bg ">
                             <tr>
                                 {columns.map((col) => (
                                     <th
@@ -600,7 +601,7 @@ export default function Contacts() {
                                 filteredData.map((row: any) => (
                                     <tr
                                         key={getUniqueKey(row)}
-                                        className="hover:bg-[var(--table-row-bg,#f7faff)]"
+                                        className="hover:bg-gray-50 even:bg-gray-50/50"
                                         onClick={() => handleRowClick(row)}
                                     >
                                         {/*{columns.map((col) => (*/}
@@ -612,13 +613,13 @@ export default function Contacts() {
                                         {columns.map((col) => (
                                             <td
                                                 key={String(col.key)}
-                                                className="p-3 border-b"
+                                                className="p-3 border-b border-secondary"
                                             >
                                                 {col.key === 'fullName'
                                                     ? `${row.lastName}, ${row.firstName}`
                                                     : String(
-                                                          row[col.key] || 'None'
-                                                      )}
+                                                        row[col.key] || 'None'
+                                                    )}
                                             </td>
                                         ))}
                                     </tr>
@@ -635,7 +636,7 @@ export default function Contacts() {
                             )}
                         </tbody>
 
-                        <tfoot className="bg-[#337ab7] text-white">
+                        {/* <tfoot className="bg-primary text-white">
                             <tr>
                                 {columns.map((col) => (
                                     <th
@@ -646,7 +647,7 @@ export default function Contacts() {
                                     </th>
                                 ))}
                             </tr>
-                        </tfoot>
+                        </tfoot> */}
                     </table>
                 </div>
             </div>

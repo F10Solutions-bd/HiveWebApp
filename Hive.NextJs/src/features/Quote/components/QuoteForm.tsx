@@ -1,6 +1,8 @@
 import { Textarea } from "@headlessui/react";
-import { DatePicker } from "../../../components/modal/DatePicker";
-import { QuoteFormProps } from "../types";
+import { useFormContext } from "react-hook-form";
+
+import { DatePicker } from "@/components/modal/DatePicker";
+import { QuoteFormData, QuoteFormProps } from "../types";
 import ChargesTable from "./ChargesTable";
 import { BasicSection } from "./sections/BasicSection";
 import { DeliverySection } from "./sections/DeliverySection";
@@ -33,28 +35,33 @@ import { PickupSection } from "./sections/PickupSection";
  * @example
  * <QuoteForm updateField={updateField} />
  */
-export default function QuoteForm({
-    dropdowns,
-    updateField,
-}: QuoteFormProps) {
+
+export default function QuoteForm({ dropdowns }: QuoteFormProps) {
+
+    const {
+        register,
+        setValue,
+        formState: { errors },
+    } = useFormContext<QuoteFormData>();
+
     return (
         <>
             <div className="py-5 text-xl">
                 {/*1st row */}
                 <div className={`grid grid-cols-1 sm:grid-cols-3 gap-2`}>
-                    <BasicSection dropdowns={dropdowns} updateField={updateField} />
+                    <BasicSection dropdowns={dropdowns} />
                 </div>
 
                 {/*2nd row*/}
                 <div className={`grid grid-cols-1 sm:grid-cols-3 mt-3 gap-2`}>
                     {/*pickup section*/}
                     <div className="flex flex-col gap-2">
-                        <PickupSection dropdowns={dropdowns} updateField={updateField} />
+                        <PickupSection dropdowns={dropdowns} />
                     </div>
 
                     {/*Delivery section*/}
                     <div className="flex flex-col gap-2">
-                        <DeliverySection dropdowns={dropdowns} updateField={updateField} />
+                        <DeliverySection dropdowns={dropdowns} />
                     </div>
 
                     {/*Others section*/}
@@ -70,7 +77,7 @@ export default function QuoteForm({
                                     placeholder="Select"
                                     parentClassName="w-full"
                                     className="w-full"
-                                    onChange={(date) => updateField("validity", date)}
+                                    onChange={(date) => setValue("validity", date)}
                                 />
                             </div>
                         </div>
@@ -91,8 +98,13 @@ export default function QuoteForm({
                                 <Textarea
                                     className="w-full"
                                     placeholder="Add Note"
-                                    onChange={(e) => updateField("notes", e.target.value)}
+                                    {...register("notes")}
                                 />
+                                {errors.notes && (
+                                    <p className="text-red-500 text-sm pt-1 pl-2">
+                                        {errors.notes.message}
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -120,7 +132,6 @@ export default function QuoteForm({
                     {/*Disclaimers section*/}
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center justify-center">
-                            {/*<label className="w-10 text-right shrink-0">*/}
                             {/*</label>*/}
                             <div className="flex w-full justify-center">
                                 <div>
@@ -143,7 +154,6 @@ export default function QuoteForm({
                     </div>
                 </div>
             </div>
-           
         </>
     );
 };

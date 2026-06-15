@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { Employee } from '@/types/common';
 import { FiX } from 'react-icons/fi';
 import { createApiClient } from '@/services/apiClient';
@@ -16,49 +16,41 @@ type Props = {
     onClose: () => void;
 };
 
+const api = createApiClient();
 export default function EmployeeModal({ id, isOpen, position, onClose }: Props) {
-    const api = createApiClient();
+    
     const [employee, setEmployee] = useState<Employee | null>(null);
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
     const ref = useRef<HTMLDivElement>(null);
 
     const [adjustedPosition, setAdjustedPosition] = useState(position);
 
-    // Dynamic positioning
-    useEffect(() => {
-        if (isOpen && ref.current) {
-            const rect = ref.current.getBoundingClientRect();
-            const { innerWidth: windowW, innerHeight: windowH } = window;
+    useLayoutEffect(() => {
+        if (!isOpen || !ref.current) return;
 
-            let newLeft = position.left;
-            let newTop = position.top;
+        const updatePosition = () => {
+            const rect = ref.current!.getBoundingClientRect();
 
-            // --- Horizontal Positioning (Right/Left) ---
-            // If it overflows the right edge, move it to the left of the click point
-            if (position.left + rect.width > windowW) {
-                newLeft = position.left - rect.width;
-            }
-            // If it overflows the left edge, move it to the right
-            if (newLeft < 0) {
-                newLeft = position.left; // Fallback to original or add padding
+            let left = position.left;
+            let top = position.top;
+
+            if (left + rect.width > window.innerWidth) {
+                left = window.innerWidth - rect.width - 10;
             }
 
-            // --- Vertical Positioning (Bottom/Top) ---
-            // If it overflows the bottom edge, move it above the click point
-            if (position.top + rect.height > windowH) {
-                newTop = position.top - rect.height;
-            }
-            // If it overflows the top edge, move it below the click point
-            if (newTop < 0) {
-                newTop = position.top; // Fallback to original
+            if (top + rect.height > window.innerHeight) {
+                top = window.innerHeight - rect.height - 10;
             }
 
-            // Final safety check: ensure it doesn't go off-screen entirely
-            const finalLeft = Math.max(10, Math.min(newLeft, windowW - rect.width - 10));
-            const finalTop = Math.max(10, Math.min(newTop, windowH - rect.height - 10));
+            setAdjustedPosition({ left, top });
+        };
 
-            setAdjustedPosition({ top: finalTop, left: finalLeft });
-        }
+        updatePosition();
+
+        const observer = new ResizeObserver(updatePosition);
+        observer.observe(ref.current);
+
+        return () => observer.disconnect();
     }, [isOpen, position]);
 
     // Close on outside click
@@ -82,14 +74,12 @@ export default function EmployeeModal({ id, isOpen, position, onClose }: Props) 
 
         const fetchEmployee = async () => {
             try {
-                setLoading(true);
-                const response = await api.get<Employee>(`/users/user/${id}`);
+                // setLoading(true);
+                const response = await api.get<Employee>(`/users/${id}`);
                 setEmployee(response.data);
             } catch (error) {
                 console.error("Failed to fetch employee details", error);
                 setEmployee(null);
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -132,7 +122,7 @@ export default function EmployeeModal({ id, isOpen, position, onClose }: Props) 
                             </div>
                             <div className="flex gap-2.5">
                                 <span className="font-bold w-28 text-right">Reports To:</span>
-                                <span>{employee.reportsTo}</span>
+                                <span>{employee.reportsName}</span>
                             </div>
                             <div className="flex gap-2.5">
                                 <span className="font-bold w-28 text-right">Employee #:</span>
@@ -143,7 +133,7 @@ export default function EmployeeModal({ id, isOpen, position, onClose }: Props) 
                         <div className="space-y-2">
                             <div className="flex flex gap-2.5">
                                 <span className="font-bold w-28 text-right">Role:</span>
-                                <span>{employee.roleNames?.[0]}</span>
+                                <span>{employee.roleName}</span>
                             </div>
                             <div className="flex flex gap-2.5">
                                 <span className="font-bold w-28 text-right">Cell Phone:</span>

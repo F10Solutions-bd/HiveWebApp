@@ -1,10 +1,15 @@
+import { useFormContext, Controller } from "react-hook-form";
 import Select from "@/components/modal/Select";
-import { QuoteFormProps } from "../../types";
-
+import { QuoteFormData, QuoteFormProps } from "../../types";
 /**
  * Basic Section of quote form.
  */
-export function BasicSection({ dropdowns, updateField }: QuoteFormProps) {
+export function BasicSection({ dropdowns }: QuoteFormProps) {
+    const {
+        control,
+        formState: { errors },
+    } = useFormContext<QuoteFormData>();
+
     return (
         <>
             {/*account*/}
@@ -13,29 +18,50 @@ export function BasicSection({ dropdowns, updateField }: QuoteFormProps) {
                     <span className="text-danger">*</span> Account:
                 </label>
                 <div className="flex-1">
-                    <Select
-                        parentClassName=""
-                        className="w-full"
-                        placeholder="Search"
-                        options={dropdowns.account}
-                        onSelect={(value) => updateField("account", value)}
+                    <Controller
+                        name="account"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                className="w-full"
+                                placeholder="Search"
+                                options={dropdowns.account}
+                                value={field.value}
+                                onSelect={(value) => field.onChange(value)}
+                            />
+                        )}
                     />
+                    {errors.account && (
+                        <p className="text-red-500 text-sm pt-1 pl-2">
+                            {errors.account.message}
+                        </p>
+                    )}
                 </div>
             </div>
 
-            {/*Mode*/}
             <div className="flex items-center gap-3 w-full">
                 <label className="w-32 text-right shrink-0">
                     <span className="text-danger">*</span> Mode:
                 </label>
                 <div className="basis-full">
-                    <Select
-                        parentClassName="w-full"
-                        className="w-full"
-                        placeholder="Truckload/Drayage"
-                        options={dropdowns.mode}
-                        onSelect={(value) => updateField("mode", value)}
+                    <Controller
+                        name="mode"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                className="w-full"
+                                placeholder="Truckload/Drayage"
+                                options={dropdowns.mode}
+                                value={field.value}
+                                onSelect={(value) => field.onChange(value)}
+                            />
+                        )}
                     />
+                    {errors.mode && (
+                        <p className="text-red-500 text-sm pt-1 pl-2">
+                            {errors.mode.message}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -45,12 +71,24 @@ export function BasicSection({ dropdowns, updateField }: QuoteFormProps) {
                     <span className="text-danger">*</span> Equipment:
                 </label>
                 <div className="flex-1">
-                    <Select
-                        className="w-full"
-                        placeholder="Type"
-                        options={dropdowns.equipment}
-                        onSelect={(value) => updateField("equipment", value)}
+                    <Controller
+                        name="equipment"
+                        control={control}
+                        render={({ field }) => (
+                            <Select
+                                className="w-full"
+                                placeholder="Type"
+                                options={dropdowns.equipment}
+                                value={field.value}
+                                onSelect={(value) => field.onChange(value)}
+                            />
+                        )}
                     />
+                    {errors.equipment && (
+                        <p className="text-red-500 text-sm pt-1 pl-2">
+                            {errors.equipment.message}
+                        </p>
+                    )}
                 </div>
             </div>
         </>

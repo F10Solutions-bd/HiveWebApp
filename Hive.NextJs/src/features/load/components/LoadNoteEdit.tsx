@@ -193,7 +193,7 @@ export const LoadNoteEdit: React.FC<LoadNoteEditProps> = ({
                                 <div className="flex flex-col gap-1 text-[13px] xl:text-sm">
                                     <label>Priority:</label>
                                     <select
-                                        className="w-full border border-gray-300 rounded p-2"
+                                        className="w-full border border-gray-300 rounded"
                                         value={newTask.priority}
                                         onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
                                     >

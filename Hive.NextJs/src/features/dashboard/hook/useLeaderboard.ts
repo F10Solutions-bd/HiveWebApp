@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { getLeaderboard, getOfficeLeaderboard } from "@/features/dashboard/services/dashboard";
+import { getLeaderboard } from "@/features/dashboard/services/dashboard";
 import { LeaderboardItem, LeaderboardType } from "../types";
 
 export const useLeaderboard = (
@@ -21,16 +21,16 @@ export const useLeaderboard = (
             setError(null);
 
             try {
-                const res =
-                    type === "office"
-                        ? await getOfficeLeaderboard({
-                            type,
-                            dateFilterType: dateRange,
-                        })
-                        : await getLeaderboard({
-                            type,
-                            dateFilterType: dateRange,
-                        });
+                const res = await getLeaderboard({ type, dateFilterType: dateRange });
+                //type === "office"
+                //    ? await getOfficeLeaderboard({
+                //        type,
+                //        dateFilterType: dateRange,
+                //    })
+                //    : await getLeaderboard({
+                //        type,
+                //        dateFilterType: dateRange,
+                //    });
 
                 // prevent outdated response overwrite
                 if (!isMounted || requestId !== requestIdRef.current) return;

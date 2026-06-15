@@ -1,10 +1,19 @@
-import { FooterSectionProps } from "../../types";
-import { DatePicker } from "../../../../components/modal/DatePicker";
+import { useFormContext } from "react-hook-form";
+import { QuoteFormData } from "../../types";
+import { DatePicker } from "@/components/modal/DatePicker";
+import { useQuoteActions } from "../../hooks/useQuoteActions";
 
 /**
  * Footer Section of quote form.
  */
-export function FooterSection({ actions, updateField }: FooterSectionProps) {
+export function FooterSection() {
+
+    const {
+        setValue,
+    } = useFormContext<QuoteFormData>();
+
+    const actions = useQuoteActions();
+
     return (
         <>
             <div className="w-[10px] sm:w-[10px] md:w-[95px] lg:w-[150px] xl:w-[100px] 2xl:w-[70px]">
@@ -17,7 +26,7 @@ export function FooterSection({ actions, updateField }: FooterSectionProps) {
                     Follow Up:
                 </div>
                 <DatePicker
-                    onChange={(date) => updateField("followUp", date)}
+                    onChange={(date) => setValue("followUp", date)}
                     placeholder="Date & Time"
                     parentClassName="w-full overflow-visible"
                     childClassName="bottom-0"
@@ -38,6 +47,7 @@ export function FooterSection({ actions, updateField }: FooterSectionProps) {
             >
                 Create & Send
             </button>
+
             <button
                 type="button"
                 className="mt-3 py-1 inline-flex w-full justify-center items-center rounded-md bg-primary px-3 text-white inset-ring inset-ring-white/5 hover:bg-primary-hover sm:mt-0 sm:w-auto"

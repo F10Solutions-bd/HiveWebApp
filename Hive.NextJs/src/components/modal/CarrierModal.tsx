@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 import { createApiClient } from '@/services/apiClient';
 import Link from 'next/link';
@@ -32,42 +32,49 @@ type Props = {
     onClose: () => void;
 };
 
+const api = createApiClient();
 export default function CarrierModal({
     id,
     isOpen,
     position,
     onClose,
 }: Props) {
-    const api = createApiClient();
+    // const api = createApiClient();
     const [carrier, setCarrier] = useState<CarrierDto | null>(null);
     const [loading, setLoading] = useState(true);
-    const [open, setOpen] = useState(true);
     const ref = useRef<HTMLDivElement>(null);
 
     // Dynamic positioning state
     const [adjustedPosition, setAdjustedPosition] = useState(position);
 
-    useEffect(() => {
-        if (isOpen && ref.current) {
-            const rect = ref.current.getBoundingClientRect();
-            let newLeft = position.left;
+    useLayoutEffect(() => {
+        if (!isOpen || !ref.current) return;
 
-            // Adjust if overflows right screen edge
-            if (position.left + rect.width > window.innerWidth) {
-                // If it was placed to the right of cursor, shift it exactly to the left side
-                // We'd need the trigger rect, but we can just shift it by width + some margin
-                // In page.tsx we added (rect.width + 6) -> so we subtract (rect.width + modalWidth + 12)
-                // Actually safer to just anchor it to the left edge of the screen or subtract its width
-                // For a robust fix, page.tsx calculation is better, but here we can just ensure it's visible:
-                newLeft = window.innerWidth - rect.width - 20;
+        const updatePosition = () => {
+            const rect = ref.current!.getBoundingClientRect();
+
+            let left = position.left;
+            let top = position.top;
+
+            if (left + rect.width > window.innerWidth) {
+                left = window.innerWidth - rect.width - 10;
             }
-            if (newLeft < 0) newLeft = 10;
 
-            setAdjustedPosition({ top: position.top, left: newLeft });
-        } else {
-            setAdjustedPosition(position);
-        }
-    }, [isOpen, position, carrier]);
+            if (top + rect.height > window.innerHeight) {
+                top = window.innerHeight - rect.height - 10;
+            }
+
+            setAdjustedPosition({ left, top });
+        };
+
+        updatePosition();
+
+        const observer = new ResizeObserver(updatePosition);
+        observer.observe(ref.current);
+
+        return () => observer.disconnect();
+    }, [isOpen, position]);
+   
 
     // Close on outside click
     useEffect(() => {
@@ -123,7 +130,7 @@ export default function CarrierModal({
 
     return (
         <>
-            {open && (
+            {isOpen && (
                 <div className="fixed bg-black/10 inset-0 z-70 transition-opacity duration-150">
                     {/* Modal */}
                     <div
@@ -150,25 +157,25 @@ export default function CarrierModal({
                             <div className="flex justify-between relative gap-10 !text-[12px]">
                                 <div className="space-y-1">
                                     <div className="flex gap-2.5">
-                                        <span className="font-bold w-20 text-right">
+                                        <span className="font-bold w-25 text-right">
                                             Name:
                                         </span>
                                         <span className='text-primary cursor-pointer underline'>{carrier.name}</span>
                                     </div>
                                     <div className="flex gap-2.5">
-                                        <span className="font-bold w-20 text-right">
+                                        <span className="font-bold w-25 text-right">
                                             Office:
                                         </span>
                                         <span className=''>{carrier.office}</span>
                                     </div>
                                     <div className="flex gap-2.5">
-                                        <span className="font-bold w-20 text-right">
+                                        <span className="font-bold w-25 text-right">
                                             Office Phone:
                                         </span>
                                         <span className=''>{carrier.officePhone}</span>
                                     </div>
                                     <div className="flex gap-2.5">
-                                        <span className="font-bold w-20 text-right">
+                                        <span className="font-bold w-25 text-right">
                                             Main POC:
                                         </span>
                                         <span className=''>{carrier.mainPOC}</span>

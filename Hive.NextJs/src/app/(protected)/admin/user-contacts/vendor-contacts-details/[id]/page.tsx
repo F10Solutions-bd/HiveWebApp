@@ -59,9 +59,7 @@ export default function VendorContactsDetails() {
                 systemID: userInfo?.systemId,
             };
 
-            const res = await api.post<VendorContacts>('/vendor-contacts/id', {
-                ...data,
-            });
+            const res = await api.get<VendorContacts>(`/vendor-contacts/${id}`);
 
             console.log('API Response:', res.data);
 

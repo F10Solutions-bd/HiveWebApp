@@ -61,7 +61,7 @@ export default function ChargesTable({ initialRows }: ChargesTableProps) {
                                 type="text"
                                 value={row.qty}
                                 onChange={(e) => updateRow(row.id, "qty", Number(e.target.value))}
-                                className="w-full border rounded-md text-center"
+                                className="w-full border rounded text-center"
                             />
                         </div>
 
@@ -72,7 +72,7 @@ export default function ChargesTable({ initialRows }: ChargesTableProps) {
                                 onChange={(e) =>
                                     updateRow(row.id, "customer", Number(e.target.value))
                                 }
-                                className="w-full border rounded-md text-center"
+                                className="w-full border rounded text-center"
                             />
                         </div>
 
@@ -106,7 +106,7 @@ export default function ChargesTable({ initialRows }: ChargesTableProps) {
                                 value={newChargeLabel}
                                 onChange={(e) => setNewChargeLabel(e.target.value)}
                                 placeholder="Enter label"
-                                className="w-full"
+                                className="w-full rounded"
                             />
                         </div>
                         <div className="col-span-2 text-center">
@@ -136,11 +136,11 @@ export default function ChargesTable({ initialRows }: ChargesTableProps) {
                 )}
 
                 {/* Total */}
-                <div className="grid grid-cols-12">
-                    <div className="col-span-3 text-end">Total:</div>
-                    <div className="col-span-2 text-end">$</div>
+                <div className="grid grid-cols-12 gap-2 text-end">
+                    <div className="col-span-3 font-medium">Total:</div>
+                    <div className="col-span-2 font-medium">$</div>
                     <div className="col-span-5">
-                        <input value={total.toFixed(2)} className="w-full" readOnly />
+                        <input value={total.toFixed(2)} className="w-full rounded" readOnly />
                     </div>
                     <div className="col-span-2 text-end"></div>
                 </div>

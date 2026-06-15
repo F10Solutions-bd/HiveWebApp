@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -26,16 +24,19 @@ interface User {
     lastName: string;
     fullName: string;
     email: string;
+    phone: number;
+    address: string;
     birthDate?: string;
     isActive: boolean;
+    roleId: number;
     roleIdList: number[];
     permissions: Permission[];
 }
 
 export default function UserDetailsPage() {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const tabList = ['basic', 'permissions'] as const;
-    type TabType = (typeof tabList)[number];
+    // const tabList = ['basic', 'permissions'];
+    // type TabType = (typeof tabList)[number];
+    type TabType = 'basic' | 'permissions';
 
     const api = createApiClient();
     const { id } = useParams();
@@ -66,19 +67,12 @@ export default function UserDetailsPage() {
                 }));
 
                 const rolesRes = await api.get<Roles[]>('/roles');
-                const userRolesRes = await api.get<object[]>(
-                    `/roles/user-roles/${userId}`
-                );
-                const roleIdList = (userRolesRes.data ?? []).map(
-                    (r: any) => r.id
-                );
-
                 const res = await api.get<User>(`/users/${userId}`);
+
                 const userData = {
                     ...res.data,
                     id: userId,
                     birthDate: toDisplayDateString(res.data?.birthDate),
-                    roleIdList,
                     permissions: mergedPermissions,
                 } as User;
 
@@ -111,21 +105,19 @@ export default function UserDetailsPage() {
 
                 <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
                     <button
-                        className={`flex items-center px-6 py-2 gap-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
-                            activeTab === 'basic'
-                                ? 'border-teal-500 text-teal-600 bg-teal-50'
-                                : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                        }`}
+                        className={`flex items-center px-6 py-2 gap-2 border-b-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'basic'
+                            ? 'border-teal-500 text-teal-600 bg-teal-50'
+                            : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                            }`}
                         onClick={() => setActiveTab('basic')}
                     >
                         <FaUser /> Basic Info
                     </button>
                     <button
-                        className={`flex items-center px-6 py-2 gap-2 border-b-2 font-medium transition-colors whitespace-nowrap ${
-                            activeTab === 'permissions'
-                                ? 'border-teal-500 text-teal-600 bg-teal-50'
-                                : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-                        }`}
+                        className={`flex items-center px-6 py-2 gap-2 border-b-2 font-medium transition-colors whitespace-nowrap ${activeTab === 'permissions'
+                            ? 'border-teal-500 text-teal-600 bg-teal-50'
+                            : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                            }`}
                         onClick={() => setActiveTab('permissions')}
                     >
                         <FaShieldAlt /> Permissions
@@ -189,6 +181,14 @@ export default function UserDetailsPage() {
                                         <p>Birth Date: </p>
                                         <p>{user.birthDate ?? 'none'}</p>
                                     </div>
+                                    <div className={labelValueClass}>
+                                        <p>Phone </p>
+                                        <p>{user.phone ?? 'none'}</p>
+                                    </div>
+                                    <div className={labelValueClass}>
+                                        <p>Address: </p>
+                                        <p>{user.address ?? 'none'}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -201,26 +201,22 @@ export default function UserDetailsPage() {
                                     User Roles
                                 </h3>
                                 <div className="flex flex-wrap gap-2  mt-2">
-                                    {roles
-                                        .filter((r) =>
-                                            user.roleIdList.includes(r.id)
-                                        )
-                                        .map((r) => (
+                                    {user.roleId != null ?
+                                        roles.filter((r) =>
+                                            r.id === user.roleId
+                                        ).map((r) => (
                                             <span
                                                 key={r.id}
                                                 className="bg-gray-500 text-white text-sm font-medium px-2 py-1 rounded-full"
                                             >
                                                 {r.name}
                                             </span>
-                                        ))}
-                                    {roles.filter((r) =>
-                                        user.roleIdList.includes(r.id)
-                                    ).length === 0 && (
-                                        <span className="text-gray-500 text-sm">
-                                            {' '}
-                                            No roles assigned
-                                        </span>
-                                    )}
+                                        )) : (
+                                            <span className="text-gray-500 text-sm">
+                                                {' '}
+                                                No role assigned
+                                            </span>
+                                        )}
                                 </div>
                             </div>
 

@@ -8,7 +8,12 @@ import { FiSearch, FiTrash2, FiEye, FiHelpCircle, FiX } from 'react-icons/fi';
 import { ThreeDot } from 'react-loading-indicators';
 import { toDisplayDateString } from '@/utils/dateHelper';
 import { ODataQueryBuilder } from '@/utils/oDataQueryBuilder';
-interface LogItemDto {
+import toast from 'react-hot-toast';
+import { DatePicker } from '@/components/modal/DatePicker';
+import Select from '@/components/modal/Select';
+import { SelectOption } from '@/types/common';
+
+interface LogListItemDto {
     Id: number;
     LogLevel: string;
     ShortMessage: string;
@@ -16,14 +21,47 @@ interface LogItemDto {
     CreatedOn: string;
     SystemId?: number;
     SystemName?: string;
-    ProjectId?: number;
-    ProjectName?: string;
     UserId?: number;
     FullName?: string;
     IpAddress?: string;
     PageUrl?: string;
     ReferrerUrl?: string;
 }
+
+interface LogDetailsDto {
+    id: number;
+    logLevel: string;
+    shortMessage: string;
+    fullMessage: string;
+    createdOn: string;
+    systemId?: number;
+    systemName?: string;
+    userId?: number;
+    fullName?: string;
+    ipAddress?: string;
+    pageUrl?: string;
+    referrerUrl?: string;
+}
+
+
+
+
+// interface LogItemDto {
+//     Id: number;
+//     LogLevel: string;
+//     ShortMessage: string;
+//     FullMessage: string;
+//     CreatedOn: string;
+//     SystemId?: number;
+//     SystemName?: string;
+//     ProjectId?: number;
+//     ProjectName?: string;
+//     UserId?: number;
+//     FullName?: string;
+//     IpAddress?: string;
+//     PageUrl?: string;
+//     ReferrerUrl?: string;
+// }
 interface LogSearchDto {
     CreatedFrom?: string;
     CreatedTo?: string;
@@ -35,7 +73,15 @@ interface LogSearchDto {
     SortDirection?: string;
 }
 
-const logLevels = ['All', 'Debug', 'Information', 'Warning', 'Error', 'Fatal'];
+// const logLevels = ['All', 'Debug', 'Information', 'Warning', 'Error', 'Fatal'];
+const logLevels: SelectOption[] = [
+    { label: 'All', value: 'All' },
+    { label: 'Debug', value: 'Debug' },
+    { label: 'Information', value: 'Information' },
+    { label: 'Warning', value: 'Warning' },
+    { label: 'Error', value: 'Error' },
+    { label: 'Fatal', value: 'Fatal' },
+];
 
 const LogViewer: React.FC = () => {
     const api = createApiClient();
@@ -43,9 +89,9 @@ const LogViewer: React.FC = () => {
     // -----------------------------
     // State
     // -----------------------------
-    const [logs, setLogs] = useState<LogItemDto[]>([]);
+    const [logs, setLogs] = useState<LogListItemDto[]>([]);
     const [selectedLogs, setSelectedLogs] = useState<number[]>([]);
-    const [selectedLog, setSelectedLog] = useState<LogItemDto | null>(null);
+    const [selectedLog, setSelectedLog] = useState<LogDetailsDto | null>(null);
     const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -124,7 +170,6 @@ const LogViewer: React.FC = () => {
     // Effects
     // -----------------------------
     useEffect(() => {
-        // console.log("asche ");
         handleSearch();
     }, [currentPage, itemsPerPage]);
 
@@ -134,7 +179,6 @@ const LogViewer: React.FC = () => {
     const handleSearch = async () => {
         try {
             setLoading(true);
-            console.log('search');
 
             const filterQuery = await buildODataQuery(
                 searchDto,
@@ -142,14 +186,9 @@ const LogViewer: React.FC = () => {
                 itemsPerPage
             );
 
-            //console.log("query", filterQuery);
-
             const filterResult = await api.getRaw(
                 `/odata/LogItems?${filterQuery}`
             );
-
-            //console.log("res ", filterResult.data, filterResult.data.value);
-            //console.log("cnt ", filterResult.data["@odata.count"]);
 
             setLogs(filterResult.data.value ?? []);
             setTotalCount(filterResult.data['@odata.count'] ?? 0);
@@ -196,12 +235,8 @@ const LogViewer: React.FC = () => {
         if (selectedLogs.length === 0) return;
 
         try {
-            const response = await api.post<void>(
-                '/logs/delete-selected',
-                selectedLogs
-            );
-            if (!response.isSuccess) return;
-
+            await api.post<void>('/logs/delete-selected', selectedLogs);
+            toast.success("Log deleted successfully.");
             const newLogs = logs.filter(
                 (log) => !selectedLogs.includes(log.Id)
             );
@@ -227,7 +262,7 @@ const LogViewer: React.FC = () => {
         if (window.confirm('Are you sure you want to clear all logs?')) {
             try {
                 //const response = await api.delete("/logs/clear");
-            } catch {}
+            } catch { }
             setLogs([]);
             setSelectedLogs([]);
         }
@@ -235,17 +270,21 @@ const LogViewer: React.FC = () => {
 
     // View log details
     const handleViewLog = async (id: number) => {
+        console.log("inside handle view : ", id);
         if (id <= 0) return;
 
-        try {
-            const res = await api.get<LogItemDto>(`/logs/${id}`);
+        // try {
+            const res = await api.get<LogDetailsDto>(`/logs/${id}`);
 
-            if (res.isSuccess && res.data) {
+            // if (res.isSuccess && res.data) {
+                console.log("Log details inside : ", res);
                 setSelectedLog(res.data);
                 setShowModal(true);
-            }
-        } catch {}
+        //     }
+        // } catch { }
     };
+    console.log("logs", logs);
+    console.log("selected log : ", selectedLog);
 
     // Get log level badge color
     const getLogLevelColor = (level: any) => {
@@ -266,17 +305,12 @@ const LogViewer: React.FC = () => {
     };
 
     // === Class name constants ===
-    const headerBtnClass =
-        'text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors';
-    const searchLabel =
-        'flex items-center justify-end text-sm font-medium text-gray-700 w-[25%]';
-    const inputBase =
-        'w-[60%] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
+    const headerBtnClass = 'text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors';
+    const searchLabel = 'flex items-center justify-end text-sm font-medium text-gray-700 w-[25%]';
+    // const inputBase = 'w-[60%] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500';
     const tooltipIcon = 'text-gray-400 h-5 w-5 cursor-pointer';
-    const tooltipBox =
-        'absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-800 text-white text-xs rounded-md px-2 py-1 -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10';
-    const tableHeaderCell =
-        'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+    const tooltipBox = 'absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gray-800 text-white text-xs rounded-md px-2 py-1 -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap z-10';
+    const tableHeaderCell = 'py-3 text-left text-lg font-medium text-gray-500 tracking-wider';
 
     //if(loader) return <div><p> Loading</p></div>
 
@@ -292,7 +326,7 @@ const LogViewer: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
-            <div className="bg-[#008ca8]  text-white px-6 py-2 ">
+            <div className="bg-[#008ca8] px-6 py-2 text-white ">
                 <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold">Log</h1>
                     <div className="flex gap-2">
@@ -316,11 +350,10 @@ const LogViewer: React.FC = () => {
             </div>
 
             {/* Search Section */}
-
-            <div className="bg-white mx-6 mt-6 rounded-lg">
+            <div className="bg-white mx-6 mt-6 rounded-lg bg-segment-bg">
                 <button
                     onClick={() => setSearchExpanded(!searchExpanded)}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50"
+                    className={`w-full px-6 py-4 flex items-center justify-between hover:bg-secondary bg-segment-bg ${searchExpanded ? 'rounded-t-lg' : 'rounded-lg'}`}
                 >
                     <div className="flex items-center gap-2">
                         <FiSearch size={20} />
@@ -342,10 +375,10 @@ const LogViewer: React.FC = () => {
                 </button>
 
                 {searchExpanded && (
-                    <div className="px-6 pb-6 border-t">
+                    <div className="px-6 pb-3 border border-secondary rounded-b-lg">
                         <div className="grid grid-cols-2 gap-6 mt-4">
                             {/* Created From */}
-                            <div className="flex items-center gap-3">
+                            <div className="flex justify-center items-center gap-3">
                                 <label className={`${searchLabel}`}>
                                     Created from
                                     <div className="relative group ml-1">
@@ -355,16 +388,14 @@ const LogViewer: React.FC = () => {
                                         </span>
                                     </div>
                                 </label>
-                                <input
-                                    type="date"
-                                    value={searchDto.CreatedFrom}
-                                    onChange={(e) =>
+                                <DatePicker
+                                    placeholder="Start date"
+                                    onChange={(date) =>
                                         setSearchDto({
                                             ...searchDto,
-                                            CreatedFrom: e.target.value,
+                                            CreatedFrom: date?.toDateString(),
                                         })
                                     }
-                                    className={`${inputBase}`}
                                 />
                             </div>
 
@@ -381,6 +412,8 @@ const LogViewer: React.FC = () => {
                                 </label>
                                 <input
                                     type="text"
+                                    className="w-full w-[80px] sm:w-[100px] md:w-[100px] lg:w-[120px] xl:w-[150px] 2xl:w-[180px] px-2 py-2 border border-secondary rounded-lg focus:outline-none focus:ring-1 focus:ring-[#008ca8]"
+                                    placeholder="Message"
                                     value={searchDto.Message}
                                     onChange={(e) =>
                                         setSearchDto({
@@ -388,12 +421,11 @@ const LogViewer: React.FC = () => {
                                             Message: e.target.value,
                                         })
                                     }
-                                    className={`${inputBase}`}
                                 />
                             </div>
 
                             {/* Created To */}
-                            <div className="flex items-center gap-3">
+                            <div className="flex justify-center items-center gap-3">
                                 <label className={`${searchLabel}`}>
                                     Created to
                                     <div className="relative group ml-1">
@@ -403,16 +435,12 @@ const LogViewer: React.FC = () => {
                                         </span>
                                     </div>
                                 </label>
-                                <input
-                                    type="date"
-                                    value={searchDto.CreatedTo}
-                                    onChange={(e) =>
-                                        setSearchDto({
-                                            ...searchDto,
-                                            CreatedTo: e.target.value,
-                                        })
-                                    }
-                                    className={`${inputBase}`}
+                                <DatePicker
+                                    placeholder="End date"
+                                    onChange={(date) => setSearchDto({
+                                        ...searchDto,
+                                        CreatedTo: date?.toDateString(),
+                                    })}
                                 />
                             </div>
 
@@ -427,26 +455,19 @@ const LogViewer: React.FC = () => {
                                         </span>
                                     </div>
                                 </label>
-                                <select
+                                <Select
+                                    className="w-full"
+                                    options={logLevels}
                                     value={searchDto.Level}
-                                    onChange={(e) =>
-                                        setSearchDto({
-                                            ...searchDto,
-                                            Level: e.target.value,
-                                        })
-                                    }
-                                    className={`${inputBase}`}
-                                >
-                                    {logLevels.map((level) => (
-                                        <option key={level} value={level}>
-                                            {level}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onSelect={(value) => setSearchDto({
+                                        ...searchDto,
+                                        Level: value,
+                                    })}
+                                />
                             </div>
                         </div>
 
-                        <div className="mt-6 flex justify-center">
+                        <div className="mt-5 flex justify-center">
                             <button
                                 onClick={() => {
                                     if (currentPage === 1) {
@@ -455,7 +476,7 @@ const LogViewer: React.FC = () => {
                                         setCurrentPage(1);
                                     }
                                 }}
-                                className="bg-[#008ca8] hover:bg-sky-700   text-white px-6 py-2 rounded-md flex items-center gap-2 transition-colors"
+                                className="bg-[#008ca8] hover:bg-sky-700 px-5 py-2  text-white rounded-md flex items-center gap-2 transition-colors"
                             >
                                 <FiSearch size={16} />
                                 Search
@@ -466,130 +487,131 @@ const LogViewer: React.FC = () => {
             </div>
 
             {/* Table Section */}
-            <div className="bg-white mx-6 mt-2 rounded-lg  overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="bg-gray-50 border-b">
-                            <tr>
-                                <th className="px-6 py-1 text-left">
-                                    <input
-                                        type="checkbox"
-                                        checked={
-                                            currentLogs.length > 0 &&
-                                            selectedLogs.length ===
-                                                currentLogs.length
-                                        }
-                                        onChange={handleSelectAll}
-                                        className="rounded border-gray-300"
-                                    />
-                                </th>
-                                <th className={tableHeaderCell}>Log level</th>
-                                <th className={tableHeaderCell}>
-                                    Short message
-                                </th>
-                                <th className={tableHeaderCell}>User</th>
-                                <th className={tableHeaderCell}>System</th>
-                                <th className={tableHeaderCell}>Created on</th>
-                                <th className={tableHeaderCell}>View</th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {loading ? (
+            <div className="mx-6 mt-6 rounded-lg overflow-hidden bg-segment-bg p-2">
+                <div className="bg-white rounded-md">
+                    <div className="overflow-x-auto py-2">
+                        <table className="bg-white w-full rounded-lg">
+                            <thead className="border-b border-secondary">
                                 <tr>
-                                    <td
-                                        colSpan={7}
-                                        className="py-10 text-center"
-                                    >
-                                        <div className="flex justify-center items-center">
-                                            <ThreeDot
-                                                color="#0085ad"
-                                                size="medium"
-                                                text=""
-                                                textColor=""
-                                            />
-                                        </div>
-                                    </td>
+                                    <th className="text-left !pl-5">
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                currentLogs.length > 0 &&
+                                                selectedLogs.length === currentLogs.length
+                                            }
+                                            onChange={handleSelectAll}
+                                            className="rounded border-gray-300 m-0 !w-auto"
+                                        />
+                                    </th>
+                                    <th className={tableHeaderCell}>Log level</th>
+                                    <th className={tableHeaderCell}>
+                                        Short message
+                                    </th>
+                                    <th className={tableHeaderCell}>User</th>
+                                    <th className={tableHeaderCell}>System</th>
+                                    <th className={tableHeaderCell}>Created on</th>
+                                    <th className={tableHeaderCell}>View</th>
                                 </tr>
-                            ) : currentLogs.length === 0 ? (
-                                <tr>
-                                    <td
-                                        colSpan={5}
-                                        className="px-6 py-8 text-center text-gray-500"
-                                    >
-                                        No data available in table
-                                    </td>
-                                </tr>
-                            ) : (
-                                currentLogs.map((log) => (
-                                    <tr
-                                        key={log.Id}
-                                        className="hover:bg-gray-50"
-                                    >
-                                        <td className="px-6 py-2">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedLogs.includes(
-                                                    log.Id
-                                                )}
-                                                onChange={() =>
-                                                    handleSelectLog(log.Id)
-                                                }
-                                                className="rounded border-gray-300"
-                                            />
-                                        </td>
-                                        <td className="px-6 py-2">
-                                            <span
-                                                className={`px-3 py-2 rounded-full text-sm font-medium border ${getLogLevelColor(log.LogLevel)}`}
-                                            >
-                                                {log.LogLevel}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-2 text-sm text-gray-900">
-                                            {log.ShortMessage}
-                                        </td>
-                                        <td className="px-6 py-2 text-sm text-gray-900">
-                                            {log.FullName}
-                                        </td>
-                                        <td className="px-6 py-2 text-sm text-gray-900">
-                                            {log.SystemName}
-                                        </td>
-                                        <td className="px-6 py-2 text-sm text-gray-500">
-                                            {toDisplayDateString(log.CreatedOn)}
-                                        </td>
-                                        <td className="px-6 py-2">
-                                            <button
-                                                onClick={() =>
-                                                    handleViewLog(log.Id)
-                                                }
-                                                className="text-[#008ca8] hover:text-blue-800 flex items-center gap-1 text-sm"
-                                            >
-                                                <FiEye size={16} />
-                                                View
-                                            </button>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                                {loading ? (
+                                    <tr>
+                                        <td
+                                            colSpan={7}
+                                            className="py-10 text-center"
+                                        >
+                                            <div className="flex justify-center items-center">
+                                                <ThreeDot
+                                                    color="#0085ad"
+                                                    size="medium"
+                                                    text=""
+                                                    textColor=""
+                                                />
+                                            </div>
                                         </td>
                                     </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
+                                ) : currentLogs.length === 0 ? (
+                                    <tr>
+                                        <td
+                                            colSpan={7}
+                                            className="px-6 py-8 text-center text-gray-500"
+                                        >
+                                            No data available in table
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    currentLogs.map((log) => (
+                                        <tr
+                                            key={log.Id}
+                                            className="hover:bg-gray-50"
+                                        >
+                                            <td className="py-3 pl-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedLogs.includes(
+                                                        log.Id
+                                                    )}
+                                                    onChange={() =>
+                                                        handleSelectLog(log.Id)
+                                                    }
+                                                    className="rounded border-gray-300 flex items-center !w-auto"
+                                                />
+                                            </td>
+                                            <td className="">
+                                                <span
+                                                    className={`p-2 rounded-full text-sm font-medium border ${getLogLevelColor(log.LogLevel)}`}
+                                                >
+                                                    {log.LogLevel}
+                                                </span>
+                                            </td>
+                                            <td className="text-sm text-gray-900">
+                                                {log.ShortMessage}
+                                            </td>
+                                            <td className="text-sm text-gray-900">
+                                                {log.FullName}
+                                            </td>
+                                            <td className="text-sm text-gray-900">
+                                                {log.SystemName}
+                                            </td>
+                                            <td className="text-sm text-gray-500">
+                                                {toDisplayDateString(log.CreatedOn)}
+                                            </td>
+                                            <td className="">
+                                                <button
+                                                    onClick={() =>
+                                                        handleViewLog(log.Id)
+                                                    }
+                                                    className="text-[#008ca8] hover:text-blue-800 flex items-center gap-1 text-sm"
+                                                >
+                                                    <FiEye size={16} />
+                                                    View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination */}
+
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        itemsPerPage={itemsPerPage}
+                        totalItems={totalCount}
+                        onPageChange={(page) => {
+                            setCurrentPage(page);
+                        }}
+                        onItemsPerPageChange={(count) => {
+                            setItemsPerPage(count);
+                            setCurrentPage(1);
+                        }}
+                        pageSizeOptions={[10, 15, 20, 50]}
+                    />
                 </div>
-
-                {/* Pagination */}
-
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    itemsPerPage={itemsPerPage}
-                    totalItems={totalCount}
-                    onPageChange={(page) => {
-                        setCurrentPage(page);
-                    }}
-                    onItemsPerPageChange={(count) => {
-                        setItemsPerPage(count);
-                        setCurrentPage(1);
-                    }}
-                    pageSizeOptions={[10, 15, 20, 50]}
-                />
             </div>
 
             {/*Modal*/}
@@ -604,58 +626,58 @@ const LogViewer: React.FC = () => {
                         </button>
 
                         <h2 className="text-xl font-semibold mb-4 text-gray-800">
-                            Log Details (ID: {selectedLog.Id})
+                            Log Details (ID: {selectedLog.id})
                         </h2>
 
                         <div className="space-y-3">
                             <DetailRow
                                 label="Log Level"
-                                value={selectedLog.LogLevel}
+                                value={selectedLog.logLevel}
                             />
                             <DetailRow
                                 label="Short Message"
-                                value={selectedLog.ShortMessage}
+                                value={selectedLog.shortMessage}
                             />
                             <DetailRow
                                 label="Full Message"
-                                value={selectedLog.FullMessage}
+                                value={selectedLog.fullMessage}
                             />
                             <DetailRow
                                 label="Full Message"
-                                value={selectedLog.FullMessage}
+                                value={selectedLog.fullMessage}
                             />
                             <DetailRow
                                 label="IP Address"
-                                value={selectedLog.IpAddress}
+                                value={selectedLog.ipAddress}
                             />
                             <DetailRow
                                 label="Page URL"
-                                value={selectedLog.PageUrl}
+                                value={selectedLog.pageUrl}
                             />
                             <DetailRow
                                 label="Referrer URL"
-                                value={selectedLog.ReferrerUrl}
+                                value={selectedLog.referrerUrl}
                             />
                             <DetailRow
                                 label="System"
-                                value={selectedLog.SystemName}
+                                value={selectedLog.systemName}
                             />
                             <DetailRow
                                 label="SystemId"
-                                value={selectedLog.SystemId}
+                                value={selectedLog.systemId}
                             />
                             <DetailRow
                                 label="User"
-                                value={selectedLog.FullName}
+                                value={selectedLog.fullName}
                             />
                             <DetailRow
                                 label="UserId"
-                                value={selectedLog.UserId}
+                                value={selectedLog.userId}
                             />
                             <DetailRow
                                 label="Created On"
                                 value={new Date(
-                                    selectedLog.CreatedOn
+                                    selectedLog.createdOn
                                 ).toLocaleString()}
                             />
                         </div>
@@ -671,7 +693,7 @@ const LogViewer: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div>
+        </div >
     );
 };
 

@@ -1,4 +1,4 @@
-import { DropdownState, QuoteFormData } from ".";
+import { DropdownState } from ".";
 
 /**
  * Props for the Create Quote modal component.
@@ -36,43 +36,10 @@ export interface QuoteModalProps {
  */
 export type QuoteFormProps = {
     dropdowns: DropdownState;
-    formData?: QuoteFormData;
-    updateField: <K extends keyof QuoteFormData>(
-        key: K,
-        value: QuoteFormData[K]
-    ) => void;
-};
-
-
-/**
- * Props for the footer section of the quote modal.
- *
- * Contains action handlers for different quote operations
- * along with optional dropdown and form update support.
- *
- * @typeParam K - Key of the QuoteFormData object
- *
- * @property dropdowns - Optional dropdown data (if needed in footer)
- * @property updateField - Function to update form fields (e.g., follow-up date)
- * @property actions - Object containing footer action handlers:
- * - submit: Generates the quote
- * - createAndSend: Creates and sends the quote
- * - createAndDownload: Creates and downloads the quote
- *
- * @example
- * actions.submit();
- * actions.createAndSend();
- */
-export type FooterSectionProps = {
-    dropdowns?: DropdownState;
-    updateField: <K extends keyof QuoteFormData>(
-        key: K,
-        value: QuoteFormData[K]
-    ) => void;
-
-    actions: {
-        submit: () => void;
-        createAndSend: () => void;
-        createAndDownload: () => void;
-    };
+    //formData?: QuoteFormData;
+    //updateField: <K extends keyof QuoteFormData>(
+    //    key: K,
+    //    value: QuoteFormData[K]
+    //) => void;
+    //errors?:Record<string, string>
 };

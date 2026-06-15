@@ -121,12 +121,12 @@ export default function RoleListPage() {
     const handleSave = async () => {
         try {
             if (isEditing && editRole) {
-                const res = await api.put<number>('/roles/update', {
+                const res = await api.put(`/roles/${editRole.id}`, {
                     ...formData,
                 });
                 toast.success(res.message);
             } else {
-                const res = await api.post<number>('/roles/create', {
+                const res = await api.post('/roles', {
                     ...formData,
                 });
                 toast.success(res.message);
@@ -177,6 +177,9 @@ export default function RoleListPage() {
     // --------------------
     // JSX
     // --------------------
+
+
+    console.log("roles : ", roles);
     return (
         <>
             <div>

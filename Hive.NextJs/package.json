@@ -3,7 +3,7 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --experimental-https --experimental-https-key ./localhost+112-key.pem --experimental-https-cert ./localhost+112.pem -p 3000 -H 0.0.0.0",
+        "dev": "next dev --experimental-https --experimental-https-key ./localhost+249-key.pem --experimental-https-cert ./localhost+249.pem -p 3000 -H 0.0.0.0",
         "build": "next build",
         "start:https": "cross-env NODE_ENV=production node server.js",
         "lint": "eslint",
@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "@headlessui/react": "^2.2.9",
+        "@hookform/resolvers": "^5.2.2",
         "axios": "^1.13.2",
         "clsx": "^2.1.1",
         "cross-env": "^10.1.0",
@@ -21,15 +22,17 @@
         "react": "19.2.3",
         "react-apexcharts": "^1.9.0",
         "react-dom": "19.2.3",
+        "react-hook-form": "^7.75.0",
         "react-hot-toast": "^2.6.0",
         "react-icons": "^5.5.0",
         "react-loading-indicators": "^1.0.1",
         "react-select": "^5.10.2",
         "recharts": "^3.6.0",
         "tailwind-scrollbar-hide": "^4.0.0",
-        "zod": "^4.3.6"
+        "zod": "^4.4.2"
     },
     "devDependencies": {
+        "@hookform/devtools": "^4.4.0",
         "@tailwindcss/postcss": "^4",
         "@types/node": "^20",
         "@types/react": "^19",

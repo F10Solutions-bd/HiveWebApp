@@ -1,17 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Select from "@/components/modal/Select";
 import { DashboardDropdownState } from "../../types/dropDown";
-import { LoadCreate } from "../../types";
+import { Controller, useFormContext } from "react-hook-form";
+import { CreateLoadFormData } from "@/features/load/types/createLoadFormData";
 
 type Props = {
     dropdowns: Pick<DashboardDropdownState, "customer" | "loadType">;
-    setLoadCreateFormData: React.Dispatch<React.SetStateAction<LoadCreate>>;
 };
 
 const CreateLoadForm: React.FC<Props> = ({
-    dropdowns,
-    setLoadCreateFormData,
+    dropdowns
 }) => {
+
+    const { control, formState: { errors } } = useFormContext<CreateLoadFormData>();
+
     return (
         <>
             {/* Customer */}
@@ -20,42 +22,64 @@ const CreateLoadForm: React.FC<Props> = ({
                     <span className="text-danger mr-1 -mt-1">*</span>
                     Customer:
                 </div>
-
-                <Select
-                    options={dropdowns.customer}
-                    value=""
-                    placeholder="Select"
-                    className="!rounded-[5px] border-secondary w-[230px] !h-8.5 text-xl"
-                    dropdownWidth="230px"
-                    onSelect={(optionValue) =>
-                        setLoadCreateFormData((prev) => ({
-                            ...prev,
-                            customerId: Number(optionValue),
-                        }))
-                    }
-                />
+                <div className='flex flex-col w-full gap-2'>
+                    <Controller
+                        name="customerId"
+                        control={control}
+                        render={({ field }) => (
+                            <div>
+                                <Select
+                                    options={dropdowns.customer}
+                                    value={field.value != null ? String(field.value) : ''}
+                                    placeholder="Select"
+                                    className="!rounded-[5px] border-secondary w-[230px] !h-8.5 text-xl"
+                                    dropdownWidth="230px"
+                                    onSelect={(val) =>
+                                        field.onChange(val === '' ? null : Number(val))
+                                    }
+                                />
+                            </div>
+                        )}
+                    />
+                    {errors.customerId && (
+                        <p className="text-red-500 text-sm mt-1">
+                            {errors?.customerId.message}
+                        </p>
+                    )}
+                </div>
             </div>
 
             {/* Mode */}
-            <div className="flex justify-end items-center gap-2 mb-2">
+            <div className="flex justify-end items-center gap-2 mb-2 ">
                 <label className="!text-[21px] !font-normal">
                     <span className="text-danger mr-1 -mt-1">*</span>
                     Mode:
                 </label>
 
-                <Select
-                    options={dropdowns.loadType}
-                    value=""
-                    placeholder="Select"
-                    className="!rounded-[5px] border-secondary w-[230px] !h-8.5 text-xl"
-                    dropdownWidth="230px"
-                    onSelect={(optionValue) =>
-                        setLoadCreateFormData((prev) => ({
-                            ...prev,
-                            loadType: optionValue,
-                        }))
-                    }
-                />
+                <div className='flex flex-col w-full gap-2 lg:pl-12'>
+                    <Controller
+                        name="loadType"
+                        control={control}
+                        render={({ field }) => (
+                            <div>
+                                <Select
+                                    options={dropdowns.loadType}
+                                    value={field.value ?? ''}
+                                    onSelect={(val) => field.onChange(val)}
+                                    placeholder="Select"
+                                    className="!rounded-[5px] border-secondary w-[230px] !h-8.5 text-xl"
+                                    dropdownWidth="230px"
+                                />
+
+                            </div>
+                        )}
+                    />
+                    {errors.loadType && (
+                        <p className="text-red-500 text-sm mt-1">
+                            {errors.loadType.message}
+                        </p>
+                    )}
+                </div>
             </div>
 
             {/* Type */}

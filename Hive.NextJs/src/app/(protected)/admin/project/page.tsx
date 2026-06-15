@@ -83,18 +83,19 @@ export default function ProjectListPage() {
     const handleSave = async () => {
         if (isEditing && editProject) {
             try {
-                const res = await api.put<number>('/projects/update', {
+                await api.put(`/projects/${editProject.id}`, {
                     ...formData,
                 });
                 setShowFormModal(false);
-                toast.success(res.message);
+                // toast.success(res.message);
+                toast.success("Project updated successfully.");
                 fetchProjects();
             } catch (err) {
                 console.error(err);
             }
         } else {
             try {
-                const res = await api.post<number>('/projects/create', {
+                const res = await api.post<Project>('/projects', {
                     name: formData.name,
                 });
                 setShowFormModal(false);
@@ -114,12 +115,11 @@ export default function ProjectListPage() {
     const handleDelete = async () => {
         if (deleteId !== null) {
             try {
-                const res = await api.delete<number>(
-                    `/projects/delete/${deleteId}`
-                );
+                await api.delete(`/projects/${deleteId}`);
                 setProjects(projects.filter((p) => p.id !== deleteId));
                 setShowDeleteModal(false);
-                toast.success(res.message);
+                // toast.success(res.message);
+                toast.success("Project deleted successfully.");
             } catch (err) {
                 console.error(err);
             }
@@ -225,8 +225,8 @@ export default function ProjectListPage() {
                                             {row.updatedBy == '0'
                                                 ? ''
                                                 : new Date(
-                                                      row.updatedAt
-                                                  ).toLocaleString()}
+                                                    row.updatedAt
+                                                ).toLocaleString()}
                                         </td>
                                         <td className="p-3 border-b text-center">
                                             <div className="flex justify-center gap-3">

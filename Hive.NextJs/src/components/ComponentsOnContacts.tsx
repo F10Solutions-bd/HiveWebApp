@@ -23,17 +23,18 @@ export default function TabButton({
             style={
                 active
                     ? {
-                          backgroundColor: '#76b6ea',
-                          fontWeight: '500',
-                          fontSize: '12px',
-                          letterSpacing: 0.5,
-                      }
+                        backgroundColor: "var(--color-primary)",
+                        color: "var(--color-bg)",
+                        fontWeight: '500',
+                        fontSize: '12px',
+                        letterSpacing: 0.5,
+                    }
                     : {
-                          backgroundColor: '#d9edf7', // inactive background
-                          fontWeight: 500,
-                          fontSize: '12px',
-                          letterSpacing: '0.5px',
-                      }
+                        backgroundColor: 'var(--color-primary-light)', // inactive background
+                        fontWeight: 500,
+                        fontSize: '12px',
+                        letterSpacing: '0.5px',
+                    }
             }
             className={`flex items-center gap-1 px-4 py-2 transition-colors duration-200
              ${!active ? 'hover:bg-blue-700' : ''}

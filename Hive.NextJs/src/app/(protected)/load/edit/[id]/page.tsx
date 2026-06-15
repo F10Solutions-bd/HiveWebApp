@@ -4,13 +4,13 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { FiEdit } from 'react-icons/fi';
-import { FiCopy } from 'react-icons/fi';
+import { FiEdit, FiCopy } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
+import { notFound } from 'next/navigation';
+
 import Select from '@/components/modal/Select';
 import { DatePicker } from '@/components/modal/DatePicker';
 import { toISOString } from '@/utils/dateHelper';
-import { createApiClient } from '@/services/apiClient';
 import PositionalModal from '@/components/modal/PositionalModal';
 import { Load } from '@/features/load/types/load';
 import { loadTypeTableMap, LOAD_TYPE_CONFIG } from '@/features/load/constants';
@@ -138,12 +138,24 @@ export default function Page() {
 
                 const fetchLoadData = async () => {
                     try {
-                        const { data: loadData } = await api.get<Load>(`/loads/${id}`);
-                        setLoad(loadData);
-                        console.log(loadData);
-                        setAutoPlacedCarrier(loadData?.carriers?.[0] ?? null);
+                        const res = await api.get<Load>(`/loads/${id}`);
+                        //console.log(res);
+                        // if (!loadData) {
+                        //     console.log(loadData);
+                        //     notFound();
+                        //     return;
+                        // }
+                        setLoad(res.data);
+                        //console.log(loadData);
+                        setAutoPlacedCarrier(res.data?.carrier ?? null);
 
-                    } catch { }
+                    } catch (error: any) {
+                        if (error.response && error.response.status === 404) {
+                            console.log("Load not found, redirecting...");
+
+                            notFound();
+                        }
+                    }
                 };
 
                 await Promise.allSettled([
@@ -615,8 +627,6 @@ export default function Page() {
                                 handleCarrierInfoAutoPlace={handleCarrierInfoAutoPlace}
                                 isOpenAddCarrierModal={isOpenAddCarrierModal}
                                 setIsOpenAddCarrierModal={setIsOpenAddCarrierModal}
-                                newCarrier={newCarrier}
-                                setNewCarrier={setNewCarrier}
                                 handleCarrierSave={handleCarrierSave}
                                 autoPlacedCarrier={autoPlacedCarrier}
                             />

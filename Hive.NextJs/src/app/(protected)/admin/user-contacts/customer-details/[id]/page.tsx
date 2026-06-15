@@ -74,7 +74,7 @@ export default function CustomerDetails() {
                 systemID: userInfo?.systemId,
             };
 
-            const res = await api.post<Customer>('/customers/id', { ...data });
+            const res = await api.get<Customer>(`/hiveCustomers/${id}`);
 
             console.log('API Response:', res.data);
 
@@ -92,13 +92,10 @@ export default function CustomerDetails() {
         if (!confirm('Are you sure you want to delete this customer?')) return;
 
         try {
-            await api.post('/customers/delete', {
-                id: Number(id),
-                systemID: userInfo?.systemId,
-            });
+            await api.delete(`/hiveCustomers/${id}`);
 
             alert('Customer deleted successfully.');
-            router.push('/customers'); // redirect back
+            router.push('/admin/user-contacts/contacts'); // redirect back
         } catch (err) {
             console.error('Delete error:', err);
             alert('Failed to delete customer.');

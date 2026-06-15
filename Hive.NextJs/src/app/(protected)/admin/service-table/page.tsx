@@ -15,9 +15,9 @@ type ServiceTable = {
     count: number;
 };
 
-type ServiceTableCreate = {
-    serviceTableName: string;
-};
+// type ServiceTableCreate = {
+//     serviceTableName: string;
+// };
 
 export interface ServiceTableOptions {
     name: string;
@@ -94,10 +94,10 @@ export default function ServiceTablePage() {
                 Name: serviceTableName, // matches backend DTO
             };
 
-            const res = await api.post<{ data: any; message: string }>('/service-tables', payload);
+            const res = await api.post<object>('/service-tables', payload);
 
             setShowFormModal(false);
-            toast.success(res.data?.message || 'Service table created successfully');
+            toast.success(res.message || 'Service table created successfully');
             fetchServiceTables();
         } catch (err) {
             console.error(err);
@@ -105,8 +105,8 @@ export default function ServiceTablePage() {
         }
     };
 
-    const handleTableClick = (name: string) => {
-        router.push(`/admin/service-table/variables/${name}`);
+    const handleTableClick = (id: string) => {
+        router.push(`/admin/service-table/variables/${id}`);
     };
 
     return (

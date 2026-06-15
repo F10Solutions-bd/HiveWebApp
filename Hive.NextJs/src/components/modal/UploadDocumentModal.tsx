@@ -1,13 +1,11 @@
 'use client';
 
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { FiX } from 'react-icons/fi';
 import DragAndDropFile from '../ui/Load/DragAndDropFile';
 import UploadedFile from '../ui/Load/UploadedFile';
 import Select, { SelectOption } from './Select';
-//import { SelectOption } from '../../app/(protected)/load/edit/[id]/page';
 import { createApiClient } from '@/services/apiClient';
-// import Select from '../ui/Select';
 
 export interface Document {
     id: number;
@@ -34,7 +32,6 @@ export default function UploadDocumentModal({
     onClose,
     title,
     children,
-    onSave,
     data,
     onUploadSuccess,
 }: FormModalProps) {
@@ -42,7 +39,6 @@ export default function UploadDocumentModal({
     const [selectedFiles, setSelectedFiles] = useState<Document[]>([]);
     const [showClearOption, setShowClearOption] = useState(false);
     const [showUploadedFileSection, setShowUploadedFileSection] = useState(false);
-    const [selectedDocType, setSelectedDocType] = useState<string | null>(null);
     const [UploadedFileData, setUploadedFileData] = useState<Document[]>([]);
 
     const updatedData: SelectOption[] = [
@@ -73,10 +69,6 @@ export default function UploadDocumentModal({
         setShowUploadedFileSection(false);
         setUploadedFileData([]);
         setSelectedFiles([]);
-    };
-
-    const handleSelect = (value: string) => {
-        setSelectedDocType(value);
     };
 
     const handleUpload = async () => {
@@ -227,7 +219,7 @@ export default function UploadDocumentModal({
                                                 placeholder="Select"
                                                 className="!w-full !m-0 !h-[28px]"
                                                 parentClassName="!w-full"
-                                                onSelect={handleSelect}
+                                            // onSelect={handleSelect}
                                             />
                                         </div>
                                     </>
@@ -242,7 +234,7 @@ export default function UploadDocumentModal({
                 <div className="p-4 flex justify-center">
                     <button
                         onClick={handleUpload}
-                        className="btn-primary !text-sm !rounded-xl !px-5"
+                        className="btn-primary !text-sm !rounded-xl !px-6 !py-2"
                     >
                         Upload
                     </button>

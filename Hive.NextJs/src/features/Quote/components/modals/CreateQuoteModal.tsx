@@ -3,22 +3,41 @@
 import { FiX } from 'react-icons/fi';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
 
-import { useQuoteActions } from '../../hooks/useQuoteActions';
-import { useQuoteForm } from '../../hooks/useQuoteForm';
-import { QuoteModalProps } from '../../types';
+import { QuoteFormData, QuoteModalProps } from '../../types';
 import QuoteForm from '../QuoteForm';
 import { FooterSection } from '../sections/FooterSection';
 import { useDropdowns } from '../../hooks/useDropdowns';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormProvider, useForm } from 'react-hook-form';
+import { quoteFormSchema } from '../../schema/quote.schema';
 
 export default function CreateQuoteModal({ isOpen, onClose, headline }: QuoteModalProps) {
-    const { formData, updateField } = useQuoteForm();
-    const actions = useQuoteActions(formData);
-    const dropdowns = useDropdowns();
 
+    const methods = useForm<QuoteFormData>({
+        resolver: zodResolver(quoteFormSchema),
+        defaultValues: {
+            account: "",
+            mode: "",
+            equipment: "",
+            pickupCity: "",
+            pickupState: "",
+            pickupZip: "",
+            pickupDate: null,
+            deliveryCity: "",
+            deliveryState: "",
+            deliveryZip: "",
+            deliveryDate: null,
+            validity: null,
+            notes: "",
+            followUp: null,
+        },
+    });
+
+    const dropdowns = useDropdowns();
     if (!isOpen) return null;
 
     return (
-        <div>
+        <FormProvider {...methods}>
             <Dialog open={isOpen} onClose={onClose} className="relative z-60">
                 <DialogBackdrop
                     transition
@@ -45,20 +64,21 @@ export default function CreateQuoteModal({ isOpen, onClose, headline }: QuoteMod
                                         <DialogTitle className="text-3xl font-normal text-fg text-center">
                                             {headline}
                                         </DialogTitle>
-                                        <QuoteForm dropdowns={dropdowns} updateField={updateField} />
+                                        <QuoteForm dropdowns={dropdowns} />
 
                                     </div>
+
                                 </div>
                             </div>
 
                             {/*footer*/}
                             <div className="bg-bg px-4 pb-7 rounded-lg sm:flex sm:flex-row-reverse text-xl sm:px-6">
-                                <FooterSection actions={actions} updateField={updateField} />
+                                <FooterSection />
                             </div>
                         </DialogPanel>
                     </div>
                 </div>
             </Dialog>
-        </div>
+        </FormProvider>
     )
 }

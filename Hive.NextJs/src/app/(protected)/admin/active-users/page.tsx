@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ThreeDot } from "react-loading-indicators";
 import { createApiClient } from '@/services/apiClient';
+import DynamicHeaderTitle from "@/components/features/contact-and-vendors-details/DynamicHeaderTitle";
 
 /* ===== Interface ===== */
 interface ActiveUser {
@@ -27,7 +28,7 @@ export default function ActiveUsersPage() {
     const fetchActiveUsers = useCallback(async () => {
         try {
             setLoading(true);
-            const res = await api.get<ActiveUser[]>("/activeuser/");
+            const res = await api.get<ActiveUser[]>("/users/active-users");
             setUsers(res.data ?? []);
         } catch (error) {
             console.error("Failed to load active users", error);
@@ -56,7 +57,7 @@ export default function ActiveUsersPage() {
     );
 
     const tableHeaderCell =
-        "px-6 py-3 text-left text-xs font-semibold uppercase bg-[#008ca8] text-white";
+        "px-6 py-3 text-left text-sm font-semibold uppercase bg-primary text-white";
 
     /* ===== Copy Token Function ===== */
     const copyToken = (token: string) => {
@@ -66,32 +67,35 @@ export default function ActiveUsersPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <div className="bg-[#008ca8] text-white px-6 py-2">
-                <h1 className="text-2xl font-bold text-center">Active Users</h1>
+        <div className="min-h-screen bg-segment">
+            {/* <DynamicHeaderTitle title="Active Users" /> */}
+            <div className="bg-segment rounded-lg">
+                <div className="flex flex-wrap gap-4 items-center p-2.5">
+                    <div className="flex-1 min-w-[300px]">
+                        <h1 className="text-3xl font-bold text-gray-900 p-5">Active Users</h1>
+                    </div>
+                </div>
             </div>
-
             <div className="pt-6 px-6">
                 {/* Search */}
                 <div className="bg-white rounded-lg p-4 mb-4 flex justify-end">
-                    <div className="w-full max-w-xs">
+                    <div className="w-full max-w-xs rounded-2xl">
                         <input
                             type="text"
                             placeholder="Search by username..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md
+                            className="w-full p-3 rounded-md p-5
                             focus:outline-none focus:ring-2 focus:ring-[#008ca8]"
                         />
                     </div>
                 </div>
 
                 {/* Table */}
-                <div className="bg-white rounded-lg shadow-lg border">
+                <div className="bg-white rounded-lg shadow-lg">
                     <div className="max-h-[600px] overflow-auto">
-                        <table className="min-w-[1000px] w-full border-collapse">
-                            <thead>
+                        <table className="w-full border-collapse">
+                            <thead className="sticky top-0 z-10">
                                 <tr>
                                     <th className={tableHeaderCell}>User ID</th>
                                     <th className={tableHeaderCell}>Full Name</th>
@@ -137,7 +141,7 @@ export default function ActiveUsersPage() {
                                                     </span>
                                                     <button
                                                         onClick={() => copyToken(u.token)}
-                                                        className="px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+                                                        className="px-2 py-1 bg-green-500 text-white text-sm rounded hover:bg-green-600"
                                                     >
                                                         Copy
                                                     </button>
@@ -153,15 +157,13 @@ export default function ActiveUsersPage() {
 
                     {/* Pagination */}
                     {!loading && filteredUsers.length > 0 && (
-                        <div className="flex justify-between items-center px-6 py-4 border-t">
+                        <div className="flex justify-between items-center px-6 py-4 border-t border-secondary">
                             <div className="flex items-center gap-4">
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm text-gray-600">Rows per page:</span>
                                     <select
                                         value={pageSize}
                                         onChange={(e) => setPageSize(Number(e.target.value))}
-                                        className="border border-gray-300 rounded px-2 py-1 text-sm
-                                        focus:outline-none focus:ring-2 focus:ring-[#008ca8]"
                                     >
                                         <option value={5}>5</option>
                                         <option value={10}>10</option>
@@ -178,7 +180,7 @@ export default function ActiveUsersPage() {
                                 <button
                                     disabled={currentPage === 1}
                                     onClick={() => setCurrentPage((p) => p - 1)}
-                                    className="px-4 py-1.5 rounded bg-[#008ca8] text-white text-sm font-medium hover:bg-[#00718a] disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                                    className="px-4 py-1.5 rounded bg-primary text-white text-sm font-medium hover:bg-[#00718a] disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                                 >
                                     Prev
                                 </button>
@@ -186,7 +188,7 @@ export default function ActiveUsersPage() {
                                 <button
                                     disabled={currentPage === totalPages}
                                     onClick={() => setCurrentPage((p) => p + 1)}
-                                    className="px-4 py-1.5 rounded bg-[#008ca8] text-white text-sm font-medium hover:bg-[#00718a] disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
+                                    className="px-4 py-1.5 rounded bg-primary text-white text-sm font-medium hover:bg-[#00718a] disabled:bg-gray-300 disabled:text-gray-600 disabled:cursor-not-allowed"
                                 >
                                     Next
                                 </button>

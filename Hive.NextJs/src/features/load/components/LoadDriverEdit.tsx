@@ -145,7 +145,7 @@ export const LoadDriverEdit: React.FC<LoadDriverEditProps> = ({
                             type="text"
                             placeholder="Driver Name"
                             className=""
-                            value={driverNameSearch !== '' ? driverNameSearch : (autoPlacedDriver?.name || load?.drivers?.[0]?.name || '')}
+                            value={driverNameSearch !== '' ? driverNameSearch : (autoPlacedDriver?.name || load?.driver?.name || '')}
                             onChange={(e) => handleDriverSearch(e.target.value)}
                             onFocus={() => { if (driverSuggestions.length > 0) setIsDriverSuggestionOpen(true); }}
                             onBlur={() => setTimeout(() => setIsDriverSuggestionOpen(false), 200)}
@@ -173,7 +173,7 @@ export const LoadDriverEdit: React.FC<LoadDriverEditProps> = ({
                         type="text"
                         placeholder="Cell #"
                         className="bg-transparent"
-                        value={autoPlacedDriver?.phone || load?.drivers?.[0]?.phone || ''}
+                        value={autoPlacedDriver?.phone || load?.driver?.phone || ''}
                         readOnly
                     />
                 </div>
@@ -188,7 +188,7 @@ export const LoadDriverEdit: React.FC<LoadDriverEditProps> = ({
                         type="text"
                         placeholder="Truck #"
                         className="bg-transparent"
-                        value={autoPlacedDriver?.truckNumber || load?.drivers?.[0]?.truckNumber || ''}
+                        value={autoPlacedDriver?.truckNumber || load?.driver?.truckNumber || ''}
                         readOnly
                     />
                 </div>
@@ -200,7 +200,7 @@ export const LoadDriverEdit: React.FC<LoadDriverEditProps> = ({
                         type="text"
                         placeholder="Trailer #"
                         className="bg-transparent"
-                        value={autoPlacedDriver?.trailerNumber || load?.drivers?.[0]?.trailerNumber || ''}
+                        value={autoPlacedDriver?.trailerNumber || load?.driver?.trailerNumber || ''}
                         readOnly
                     />
                 </div>

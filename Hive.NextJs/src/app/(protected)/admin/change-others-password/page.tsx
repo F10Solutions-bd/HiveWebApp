@@ -71,20 +71,17 @@ const ChangeOtherPassword = () => {
         };
 
         fetchSystems();
-    }, [api]);
+    }, []);
 
-    const fetchUsersBySystem = async (systemId: string) => {
-        if (systemId != '0') {
-            try {
-                const res = await api.get<User[]>(
-                    'users/by-system/' + systemId
-                );
-                setSystemUsers(res.data ?? []);
-            } catch (error) {
-                console.error('Failed to fetch users by system:', error);
-            }
-        }
+    const fetchUsersBySystem = async () => {
+        const res = await api.get<User[]>(
+            "/users/all-by-system"
+        );
+        setSystemUsers(res.data ?? []);
     };
+    useEffect(() => {
+        fetchUsersBySystem();
+    }, []);
 
     useEffect(() => {
         if (systemId !== '0' && userId !== '0' && newPassword !== '') {
@@ -135,7 +132,7 @@ const ChangeOtherPassword = () => {
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     setSystemId(value);
-                                    fetchUsersBySystem(value);
+                                    fetchUsersBySystem();
                                 }}
                                 className={`w-full ${formErrors.SystemId?.length > 0 ? '!border-red-500' : 'border-gray-500'}`}
                                 required
@@ -164,7 +161,12 @@ const ChangeOtherPassword = () => {
                             <select
                                 name="user"
                                 value={userId}
-                                onChange={(e) => setUserId(e.target.value)}
+
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setUserId(e.target.value);
+                                    fetchUsersBySystem();
+                                }}
                                 className={`w-full ${formErrors.UserId?.length > 0 ? '!border-red-500' : 'border-gray-500'}`}
                                 required
                             >

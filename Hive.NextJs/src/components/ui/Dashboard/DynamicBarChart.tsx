@@ -131,7 +131,7 @@ export function DynamicBarChart<T extends Record<string, any>>({
             ) : <div className="relative" style={{ paddingLeft: "45px" }}>
                 {/* Y Axis */}
 
-                <div className="absolute left-0 top-0 h-full w-[40px]">
+                <div className="absolute left-0 top-0 h-full w-[40px] ml-2">
                     {yAxisLabels.map((value, i) => {
                         const y = (height / tickCount) * i;
 

@@ -1,3 +1,6 @@
+import z from "zod";
+import { addCarrierSchema } from "../schema/carrier.schema";
+
 export interface Carrier {
     id: number;
     name: string;
@@ -15,3 +18,6 @@ export interface Carrier {
     isActive: boolean;
     isDeleted: boolean;
 }
+
+
+export type CarrierFormData = z.infer<typeof addCarrierSchema>;

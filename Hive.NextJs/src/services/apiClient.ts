@@ -3,18 +3,17 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { getAccessToken } from '@/services/tokenManager';
 import { toast } from "react-hot-toast";
 import { AxiosError } from "axios";
-import { getOrCreateKeyPair } from "@/lib/dpop/store";
-import { createDPoPProof } from "@/lib/dpop/proof";
 
 // --- Race Condition Prevention ---
-let isRefreshing = false;
-let refreshPromise: Promise<string | null> | null = null;
+// let isRefreshing = false;
+// let refreshPromise: Promise<string | null> | null = null;
 
 export interface ApiResponse<T> {
     message: string;
     data: T | null;
     isSuccess: boolean;
     errors: Record<string, string[]>;
+    status? : number;
 }
 interface ValidationProblemDetails {
     type: string;
@@ -56,34 +55,6 @@ export const createApiClient = (): {
         config.headers = config.headers ?? {};
         if (token) config.headers.Authorization = `Bearer ${token}`;
 
-        // ==========================
-        // 🔐 DPoP PROOF GENERATION
-        // ==========================
-        try {
-            const keyPair = await getOrCreateKeyPair();
-            //const url = `${config.baseURL ?? ''}${config.url}`;
-            const rawUrl = `${config.baseURL ?? ''}${config.url ?? ''}`;
-            const urlWithoutQuery = rawUrl.split('?')[0];
-            const method = (config.method ?? 'GET').toUpperCase();
-
-            const dpopProof = await createDPoPProof(method, urlWithoutQuery, keyPair);
-            if (dpopProof) {
-                config.headers.DPoP = dpopProof;
-            }
-        } catch (e) {
-            console.error(e);
-        }
-
-        // If a refresh is already happening, don't send this request yet.
-        // Wait for the 'winner' of the refresh race to finish.
-
-        // if (isRefreshing) {
-        //     const token = await refreshPromise;
-        //     if (token) {
-        //         config.headers.Authorization = `Bearer ${token}`;
-        //     }
-        // }
-
         return config;
     });
 
@@ -91,7 +62,7 @@ export const createApiClient = (): {
     instance.interceptors.response.use(
         (response) => response,
         async (error: AxiosError) => {
-            const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+            // const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
             const status = error.response?.status;
             const data = error.response?.data as any;
 
@@ -154,7 +125,10 @@ export const createApiClient = (): {
 
 
     const wrap = <T>(promise: Promise<AxiosResponse<ApiResponse<T>>>) =>
-        promise.then((res) => res.data);
+        promise.then((res) => ({
+            ...res.data,
+            status: res.status
+        }));
 
     return {
         get: <T>(url: string, config?: AxiosRequestConfig) =>

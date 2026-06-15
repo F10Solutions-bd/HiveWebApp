@@ -1,5 +1,5 @@
 'use client';
-import { useState, useContext } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
@@ -49,16 +49,16 @@ export default function LoginPage() {
     return (
         <div className="login-page">
             <div className="login-card">
-                <h1 className="login-title">Hive</h1>
+                <h1 className="login-title text-4xl text-primary mb-5">Hive</h1>
 
                 <form onSubmit={handleSubmit} className="login-form">
                     <div className="form-group">
-                        <label className="from-group-title" htmlFor="username">
-                            Username
+                        <label className="text-md font-light" htmlFor="username">
+                            User Name
                         </label>
                         <input
                             id="username"
-                            className='!ml-0'
+                            className='!rounded-lg ml-0'
                             type="text"
                             placeholder="Login or Emp Id"
                             value={username}
@@ -71,7 +71,7 @@ export default function LoginPage() {
                         className="form-group"
                         style={{ position: 'relative' }}
                     >
-                        <label className="from-group-title" htmlFor="password">
+                        <label className="text-md mt-1" htmlFor="password">
                             Password
                         </label>
                         <input
@@ -81,7 +81,7 @@ export default function LoginPage() {
                             value={password}
                             required
                             onChange={(e) => setPassword(e.target.value)}
-                            className="password-input !ml-0"
+                            className="password-input !rounded-lg ml-0"
                         />
 
                         {password.length > 0 && (
@@ -104,7 +104,7 @@ export default function LoginPage() {
                         )}
                     </div>
 
-                    <button type="submit" className="bg-[var(--base-bg)] p-2 rounded-md text-white hover:bg-[#008cba] cursor-pointer">
+                    <button type="submit" className="bg-primary text-xl p-2 mt-4 rounded-md text-white hover:bg-[#008cba] cursor-pointer">
                         Login &raquo;
                     </button>
                 </form>

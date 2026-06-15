@@ -1,5 +1,6 @@
-import { QuoteFormData } from "../types";
+import { useFormContext } from "react-hook-form";
 
+import { QuoteFormData } from "../types";
 
 /**
  * Custom hook that provides actions for handling quote form operations.
@@ -19,10 +20,29 @@ import { QuoteFormData } from "../types";
  * const actions = useQuoteActions(formData);
  * actions.submit();
  */
-export const useQuoteActions = (formData: QuoteFormData) => {
-    const submit = () => console.log("Form Data from generate",formData);
-    const createAndSend = () => console.log("Form Data from create and send",formData);
-    const createAndDownload = () => console.log("Form Data from create and download",formData);
+export const useQuoteActions = () => {
+    const { handleSubmit } = useFormContext<QuoteFormData>();
+
+    const submit = handleSubmit(
+        (data) => {
+            console.log("submit:", data);
+        },
+        (errors) => {
+            console.log("errors:", errors);
+        }
+    );
+
+    const createAndSend = handleSubmit((data) => {
+        console.log("send:", data);
+    }, (errors) => {
+        console.log("errors from send:", errors);
+    });
+
+    const createAndDownload = handleSubmit((data) => {
+        console.log("download:", data);
+    }, (errors) => {
+        console.log("errors from download:", errors);
+    });
 
     return { submit, createAndSend, createAndDownload };
 };

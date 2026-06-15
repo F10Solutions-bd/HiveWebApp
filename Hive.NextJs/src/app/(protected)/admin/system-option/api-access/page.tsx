@@ -115,49 +115,51 @@ export default function ApiBlockPage() {
                 onSave={handleSave}
                 actionType={isEditing ? 'update' : 'create'}
             >
-                <label>Vendor Name</label>
-                <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={(e) =>
-                        setFormData({ ...formData, name: e.target.value })
-                    }
-                    className="w-full mb-2"
-                />
+                <div className="grid">
+                    <label>Vendor Name</label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={(e) =>
+                            setFormData({ ...formData, name: e.target.value })
+                        }
+                        className="w-full mb-2"
+                    />
 
-                <label>Email</label>
-                <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                    }
-                    className="w-full mb-2"
-                />
+                    <label>Email</label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={(e) =>
+                            setFormData({ ...formData, email: e.target.value })
+                        }
+                        className="w-full mb-2"
+                    />
 
-                <label>Phone</label>
-                <input
-                    type="text"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                    }
-                    className="w-full mb-2"
-                />
+                    <label>Phone</label>
+                    <input
+                        type="text"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={(e) =>
+                            setFormData({ ...formData, phone: e.target.value })
+                        }
+                        className="w-full mb-2"
+                    />
 
-                <label>Address</label>
-                <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={(e) =>
-                        setFormData({ ...formData, address: e.target.value })
-                    }
-                    rows={3}
-                    className="w-full border"
-                />
+                    <label>Address</label>
+                    <textarea
+                        name="address"
+                        value={formData.address}
+                        onChange={(e) =>
+                            setFormData({ ...formData, address: e.target.value })
+                        }
+                        rows={3}
+                        className="w-full border"
+                    />
+                </div>
             </FormModal>
 
             <DeleteModal

@@ -1,16 +1,16 @@
 'use client';
+const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { getAccessToken } from '@/services/tokenManager';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { FiSearch } from 'react-icons/fi';
 import { LuUserCog } from 'react-icons/lu';
 import { RiBankLine, RiBarChart2Line } from 'react-icons/ri';
+import { FaRegDotCircle } from "react-icons/fa";
 import {
     LayoutDashboard,
     DollarSign,
@@ -23,19 +23,22 @@ import {
 import { getOrCreateKeyPair } from "@/lib/dpop/store";
 import { createDPoPProof } from "@/lib/dpop/proof";
 
+import { getAccessToken } from '@/services/tokenManager';
+import Image from 'next/image';
+import logo from '../../../public/hive-brand-logo.png';
 /* ---------------- Circle Icon ---------------- */
-const CircleIcon = ({ active = false }) => (
-    <span className="relative flex items-center justify-center w-4 h-4">
-        <span
-            className={`absolute w-4 h-4 rounded-full border ${active ? 'border-white' : 'border-black/40'
-                }`}
-        />
-        <span
-            className={`w-2 h-2 rounded-full ${active ? 'bg-white' : 'bg-black/40'
-                }`}
-        />
-    </span>
-);
+// const CircleIcon = ({ active = false }) => (
+//     <span className="relative flex items-center justify-center w-4 h-4">
+//         <span
+//             className={`absolute w-4 h-4 rounded-full border ${active ? 'border-white' : 'border-black/40'
+//                 }`}
+//         />
+//         <span
+//             className={`w-2 h-2 rounded-full ${active ? 'bg-white' : 'bg-black/40'
+//                 }`}
+//         />
+//     </span>
+// );
 
 /* ---------------- Menu Config ---------------- */
 const menuItems = [
@@ -69,15 +72,16 @@ export default function Sidebar() {
     const [adminMenuOpen, setAdminMenuOpen] = useState(false);
 
     /* Auto open Admin menu when on /admin routes */
-    useEffect(() => {
-        if (pathname.startsWith('/admin')) {
-            setAdminMenuOpen(true);
-        }
-    }, [pathname]);
+    // useEffect(() => {
+    //     if (pathname.startsWith('/admin')) {
+    //         setAdminMenuOpen(true);
+    //     }
+    // }, [pathname]);
 
-    const closeAdminMenu = () => {
-        setAdminMenuOpen(false);
-    };
+    // const closeAdminMenu = () => {
+    //     setAdminMenuOpen(false);
+    //     setManualAdminOpen(false);
+    // };
 
     const handleLogout = async () => {
         const url = `${baseUrl}/auth/logout`;
@@ -139,10 +143,15 @@ export default function Sidebar() {
         <div className="h-screen w-48 p-2 bg-white text-black flex flex-col shadow-[4px_0_12px_rgba(0,0,0,0.08)] overflow-auto scrollbar-hide">
             {/* Logo */}
             <div>
-                <img
+                {/* <img
                     src="/hive-brand-logo.png"
                     className="w-full"
                     alt="Hive Brand Logo"
+                />*/}
+                <Image
+                    src={logo}
+                    alt="Hive Brand Logo"
+                    priority
                 />
             </div>
 
@@ -172,12 +181,11 @@ export default function Sidebar() {
                             <div key={item.name}>
                                 {/* Admin parent */}
                                 <button
-                                    onClick={() =>
-                                        setAdminMenuOpen((prev) => !prev)
-                                    }
+                                    onClick={() => setAdminMenuOpen((prev) => !prev)}
+                                    // onClick={() => setManualAdminOpen((prev) => !prev)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isAdminActive
-                                            ? 'bg-[var(--base-bg)] text-white'
-                                            : 'text-black hover:bg-[#c3e5ec]'
+                                        ? 'bg-[var(--base-bg)] text-white'
+                                        : 'text-black hover:bg-[#c3e5ec]'
                                         }`}
                                 >
                                     <Icon
@@ -193,9 +201,10 @@ export default function Sidebar() {
                                     <ChevronRight
                                         size={16}
                                         className={`transition-transform duration-200 ${adminMenuOpen
-                                                ? 'rotate-90'
-                                                : 'rotate-0'
-                                            }`}
+                                            ? 'rotate-90'
+                                            : 'rotate-0'
+                                            }`
+                                        }
                                     />
                                 </button>
 
@@ -211,15 +220,17 @@ export default function Sidebar() {
                                                     key={subItem.name}
                                                     href={subItem.path}
                                                     className={`flex items-center gap-3 px-3 py-2 rounded-md text-[0.7rem] font-semibold transition-colors ${isSubAdminActive
-                                                            ? 'bg-[var(--base-bg)] text-white'
-                                                            : 'text-black/70 hover:bg-black/5'
+                                                        ? 'bg-[var(--base-bg)] text-white'
+                                                        : 'text-black/70 hover:bg-black/5'
                                                         }`}
                                                 >
-                                                    <CircleIcon
+                                                    {/*<CircleIcon
                                                         active={
                                                             isSubAdminActive
                                                         }
-                                                    />
+                                                    />*/}
+
+                                                    < FaRegDotCircle size="16" />
                                                     {subItem.name}
                                                 </Link>
                                             );
@@ -235,10 +246,11 @@ export default function Sidebar() {
                         <Link
                             key={item.name}
                             href={item.path}
-                            onClick={closeAdminMenu}
+                            onClick={() => setAdminMenuOpen(false)}
+                            // onClick={closeAdminMenu}
                             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                    ? 'bg-[var(--base-bg)] text-white'
-                                    : 'text-black hover:bg-[#c3e5ec]'
+                                ? 'bg-[var(--base-bg)] text-white'
+                                : 'text-black hover:bg-[#c3e5ec]'
                                 }`}
                         >
                             <Icon

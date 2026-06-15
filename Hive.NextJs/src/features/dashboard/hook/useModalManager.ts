@@ -28,10 +28,9 @@ export const useModalManager = () => {
         e: React.MouseEvent<HTMLElement>
     ) => {
         const rect = e.currentTarget.getBoundingClientRect();
-
         setAnchorPos({
-            top: rect.top + 6,
-            left: rect.left + rect.width + 6 + window.scrollX,
+            top: rect.bottom,
+            left: rect.right,
         });
 
         setPopoverModal(type);

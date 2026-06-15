@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import CommonTable from '@/components/ui/CommonTable';
+// import CommonTable from '@/components/ui/CommonTable';
 import FormModal from '@/components/modal/FormModal';
-import DeleteModal from '@/components/modal/ConfirmDeleteModal';
+// import DeleteModal from '@/components/modal/ConfirmDeleteModal';
 import { toast } from 'react-hot-toast';
 import { createApiClient } from '@/services/apiClient';
 
@@ -42,10 +42,6 @@ export default function SystemListPage() {
         isActive: true,
     });
 
-    useEffect(() => {
-        fetchOffices();
-    }, []);
-
     const fetchOffices = async () => {
         try {
             const officesRes = await api.get<Office[]>('/offices');
@@ -55,15 +51,24 @@ export default function SystemListPage() {
         }
     };
 
+    useEffect(() => {
+        (async () => {
+            await fetchOffices();
+        })();
+    }, []);
+
+    
+
     const handleSave = async () => {
         try {
-            const res = await api.post<number>('/offices', {
+            const res = await api.post('/offices', {
                 ...formData,
             });
 
             console.log(res);
             setIsOpenCreateOfficeModal(false);
             toast.success(res.message);
+            fetchOffices();
         } catch (err) {
             throw err;
         }
@@ -85,6 +90,7 @@ export default function SystemListPage() {
                             isOpen={isOpenCreateOfficeModal}
                             onClose={() => setIsOpenCreateOfficeModal(false)}
                             headline="Create Office"
+                            className="!m-6"
                         >
                             <div className="flex justify-end gap-2 mb-2">
                                 <label>Name:</label>

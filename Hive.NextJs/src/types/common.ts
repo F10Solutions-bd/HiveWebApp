@@ -13,7 +13,8 @@ export type Employee = {
     officePhone: string;
     email: string;
     reportsTo: string;
+    reportsName:string;
     phone: string;
-    roleNames?: string;
-    roleIds?: string;
+    roleName?: string;
+    roleId?: string;
 };

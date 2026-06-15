@@ -2,6 +2,10 @@
 import React from 'react';
 import { IoAddCircle } from 'react-icons/io5';
 import FormModal from '@/components/modal/FormModal';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { addCarrierSchema } from '../schema/carrier.schema';
+import { CarrierFormData } from '../types';
 
 interface LoadCarrierEditProps {
     mcDotType: 'MC' | 'DOT';
@@ -11,9 +15,7 @@ interface LoadCarrierEditProps {
     handleCarrierInfoAutoPlace: () => void;
     isOpenAddCarrierModal: boolean;
     setIsOpenAddCarrierModal: (isOpen: boolean) => void;
-    newCarrier: any;
-    setNewCarrier: (carrier: any) => void;
-    handleCarrierSave: () => void;
+    handleCarrierSave: (data: CarrierFormData) => void;
     autoPlacedCarrier: any;
 }
 
@@ -25,11 +27,35 @@ export const LoadCarrierEdit: React.FC<LoadCarrierEditProps> = ({
     handleCarrierInfoAutoPlace,
     isOpenAddCarrierModal,
     setIsOpenAddCarrierModal,
-    newCarrier,
-    setNewCarrier,
     handleCarrierSave,
     autoPlacedCarrier
 }) => {
+
+
+    const { register, formState: { errors }, handleSubmit, reset } = useForm<CarrierFormData>({
+        resolver: zodResolver(addCarrierSchema),
+        defaultValues: {
+            name: "",
+            mc: "",
+            dot: "",
+            mainPOC: "",
+            office: "",
+            email: "",
+            officePhone: "",
+            address: "",
+            terminal: "",
+            dispatcher: "",
+            dispatcherPhone: "",
+            dispatcherEmail: "",
+        },
+    });
+
+
+    const handleSave = async (data: CarrierFormData) => {
+        await handleCarrierSave(data);
+        reset();
+    }
+
     return (
         <div className="flex gap-5 justify-between mt-5">
             <div className="flex flex-col gap-2"
@@ -68,9 +94,7 @@ export const LoadCarrierEdit: React.FC<LoadCarrierEditProps> = ({
                 </div>
                 <div className='w-[var(--size)]'>
                     <button
-                        onClick={() =>
-                            setIsOpenAddCarrierModal(true)
-                        }
+                        onClick={() => setIsOpenAddCarrierModal(true)}
                         className="relative w-full btn-secondary !py-[4px] !pl-5 !pr-0.5 !rounded-2xl flex items-center justify-center gap-2"
                     >
                         <div className="text-center">Add Carrier</div>
@@ -79,9 +103,10 @@ export const LoadCarrierEdit: React.FC<LoadCarrierEditProps> = ({
 
                     <FormModal
                         isOpen={isOpenAddCarrierModal}
-                        onClose={() =>
-                            setIsOpenAddCarrierModal(false)
-                        }
+                        onClose={() => {
+                            setIsOpenAddCarrierModal(false);
+                            reset();
+                        }}
                         headline="Add Carrier"
                         className="!text-[16px] xl:!text-lg"
                     >
@@ -91,147 +116,208 @@ export const LoadCarrierEdit: React.FC<LoadCarrierEditProps> = ({
                             } as React.CSSProperties
                         }>
                             <div className="flex justify-center items-center gap-5">
-                                <div className="w-[50%] !font-normal text-right">
+                                <div className="w-[50%] flex justify-end !font-normal">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     Name:
-                                    <input
-                                        type="text"
-                                        value={newCarrier.name}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, name: e.target.value })}
-                                        placeholder="name"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("name")}
+                                            placeholder="name"
+                                            className="ml-2"
+                                        />
+                                        {errors.name && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.name.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="w-[50%] !font-normal flex items-center justify-end">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     Email:
-                                    <input
-                                        type="text"
-                                        value={newCarrier.email}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, email: e.target.value })}
-                                        placeholder="email"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("email")}
+                                            placeholder="email"
+                                            className="ml-2"
+                                        />
+                                        {errors.email && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.email.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="flex justify-center items-center gap-5">
-                                <div className="w-[50%] text-right !font-normal">
+                                <div className="w-[50%] flex justify-end !font-normal">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     MC:
-                                    <input
-                                        type="text"
-                                        value={newCarrier.mc}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, mc: e.target.value })}
-                                        placeholder="MC"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("mc")}
+                                            placeholder="MC"
+                                            className="ml-2"
+                                        />
+                                        {errors.mc && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.mc.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="w-[50%] !font-normal flex items-center justify-end">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     DOT:
-                                    <input
-                                        type="text"
-                                        value={newCarrier.dot}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, dot: e.target.value })}
-                                        placeholder="DOT"
-                                        className="ml-2"
-                                    />
+
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("dot")}
+                                            placeholder="DOT"
+                                            className="ml-2"
+                                        />
+                                        {errors.dot && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.dot.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="flex justify-center items-center gap-5">
-                                <div className="w-[50%] text-right !font-normal">
+                                <div className="w-[50%] flex justify-end !font-normal">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     Phone:
-                                    <input
-                                        type="text"
-                                        value={newCarrier.officePhone}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, officePhone: e.target.value })}
-                                        placeholder="Phone"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("officePhone")}
+                                            placeholder="Phone"
+                                            className="ml-2"
+                                        />
+                                        {errors.officePhone && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.officePhone.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="w-[50%] !font-normal flex items-center justify-end">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     Main POC:
-                                    <input
-                                        type="text"
-                                        value={newCarrier.mainPOC}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, mainPOC: e.target.value })}
-                                        placeholder="Main POC"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("mainPOC")}
+                                            placeholder="Main POC"
+                                            className="ml-2"
+                                        />
+                                        {errors.mainPOC && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.mainPOC.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="flex justify-center items-center gap-5">
-                                <div className="w-[50%] text-right !font-normal">
+                                <div className="w-[50%] flex justify-end !font-normal">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     Terminal:
-                                    <input
-                                        type="text"
-                                        value={newCarrier.terminal}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, terminal: e.target.value })}
-                                        placeholder="Terminal"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("terminal")}
+                                            placeholder="Terminal"
+                                            className="ml-2"
+                                        />
+                                        {errors.terminal && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.terminal.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="w-[50%] !font-normal flex items-center justify-end">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     <span className=''>Dispatcher:</span>
-                                    <input
-                                        type="text"
-                                        value={newCarrier.dispatcher}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, dispatcher: e.target.value })}
-                                        placeholder="Dispatcher"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("dispatcher")}
+                                            placeholder="Dispatcher"
+                                            className="ml-2"
+                                        />
+                                        {errors.dispatcher && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.dispatcher.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="flex justify-center items-center gap-5">
-                                <div className="w-[50%] !font-normal flex items-center justify-end">
+                                <div className="w-[50%] !font-normal flex justify-end">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     <span className=''>Dispatcher Phone:</span>
-                                    <input
-                                        type="text"
-                                        value={newCarrier.dispatcherPhone}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, dispatcherPhone: e.target.value })}
-                                        placeholder="Dispatcher Phone"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("dispatcherPhone")}
+                                            placeholder="Dispatcher Phone"
+                                            className="ml-2"
+                                        />
+                                        {errors.dispatcherPhone && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.dispatcherPhone.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="w-[50%] text-right !font-normal">
+                                <div className="w-[50%] flex justify-end !font-normal">
                                     <span className="text-danger mr-1 -mt-1">
                                         *
                                     </span>
                                     Dispatcher Email:
-                                    <input
-                                        type="text"
-                                        value={newCarrier.dispatcherEmail}
-                                        onChange={(e) => setNewCarrier({ ...newCarrier, dispatcherEmail: e.target.value })}
-                                        placeholder="Dispatcher Email"
-                                        className="ml-2"
-                                    />
+                                    <div className="flex flex-col">
+                                        <input
+                                            type="text"
+                                            {...register("dispatcherEmail")}
+                                            placeholder="Dispatcher Email"
+                                            className="ml-2"
+                                        />
+                                        {errors.dispatcherEmail && (
+                                            <p className="text-red-500 text-sm pl-2">
+                                                {errors.dispatcherEmail.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -242,17 +328,23 @@ export const LoadCarrierEdit: React.FC<LoadCarrierEditProps> = ({
                                     </span>
                                     Address:
                                 </div>
-                                <textarea
-                                    value={newCarrier.address}
-                                    onChange={(e) => setNewCarrier({ ...newCarrier, address: e.target.value })}
-                                    placeholder="Address"
-                                    className="!w-[var(--size-input)]"
-                                />
+                                <div className="flex flex-col">
+                                    <textarea
+                                        {...register("address")}
+                                        placeholder="Address"
+                                        className="!w-[var(--size-input)]"
+                                    />
+                                    {errors.mc && (
+                                        <p className="text-red-500 text-sm pl-2">
+                                            {errors.mc.message}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="flex justify-center mt-4">
                                 <button
-                                    onClick={handleCarrierSave}
+                                    onClick={handleSubmit(handleSave)}
                                     className="btn-primary !h-8 px-6 !rounded-md text-[13px] xl:text-sm"
                                 >
                                     Save

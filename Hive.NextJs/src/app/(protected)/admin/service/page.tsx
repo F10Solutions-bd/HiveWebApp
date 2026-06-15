@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import CommonTable from '@/components/ui/CommonTable';
 import FormModal from '@/components/ui/FormModal';
 import DeleteModal from '@/components/modal/ConfirmDeleteModal';
@@ -16,9 +16,9 @@ export interface System {
     remainingDays: number;
     timeZone: string;
 }
+const api = createApiClient();
 
 export default function SystemListPage() {
-    const api = createApiClient();
     const [systems, setSystems] = useState<System[]>([]);
 
     // Modal States
@@ -49,25 +49,22 @@ export default function SystemListPage() {
         { key: 'timeZone', label: 'Time Zone' },
     ];
 
-    useEffect(() => {
-        fetchSystems();
-    }, []);
-
-    // const useEffect = async () => {
-    //     fetchSystems();
-    // };
-
-    const fetchSystems = async () => {
+    const fetchSystems = useCallback(async () => {
         try {
-            //const api1 = await createApiClient();
             const res = await api.get<System[]>('/systems');
             setSystems(res.data ?? []);
-            //toast.success(res.message);
+            toast.success(res.message);
         } catch (err) {
-            console.log(err);
-            //throw (err);
+            toast.success("Systems ");
+            throw err;
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        (async () => {
+            fetchSystems();
+        })();
+    }, []);
 
     const handleAdd = () => {
         setIsEditing(false);
@@ -94,38 +91,32 @@ export default function SystemListPage() {
     const handleSave = async () => {
         if (isEditing && editSystem) {
             try {
-                const res = await api.put<number>('/systems/update', {
+                const res = await api.put(`/systems/${formData.id}`, {
                     ...formData,
                 });
 
-                console.log(res);
-                if (systems != null) {
-                    setSystems(
-                        systems.map((s) => (s.id === res.data ? formData : s))
+                if (res.status == 204) {
+                    setSystems((prev) =>
+                        prev.map((s) =>
+                            s.id === formData.id ? formData : s
+                        )
                     );
                     setShowFormModal(false);
-
-                    toast.success(res.message);
+                    toast.success("System Updated Successfully.");
                 } else {
                     toast.error('The system is not found to edit');
                 }
             } catch (err) {
                 throw err;
             }
-        } else {
+        }
+        else {
             try {
-                const res = await api.post<number>('/systems/create', {
+                const res = await api.post<System>('/systems', {
                     ...formData,
                 });
-
-                console.log(res);
-
-                setSystems((systems) => [
-                    ...systems,
-                    { ...formData, id: res.data! },
-                ]);
+                fetchSystems();
                 setShowFormModal(false);
-
                 toast.success(res.message);
             } catch (err) {
                 throw err;
@@ -140,17 +131,17 @@ export default function SystemListPage() {
 
     const handleDelete = async () => {
         if (deleteId !== null) {
-            console.log(deleteId);
             try {
-                const res = await api.delete<number>(
-                    `/systems/delete/${deleteId}`
-                );
+                const res = await api.delete(`/systems/${deleteId}`);
 
-                setSystems(systems.filter((s) => s.id !== deleteId));
-                setShowDeleteModal(false);
+                if (res.status == 204) {
+                    setSystems(systems.filter((s) => s.id !== deleteId));
+                    setShowDeleteModal(false);
 
-                toast.success(res.message);
+                    toast.success("System Deleted Successfully.");
+                }
             } catch (err) {
+                toast.error("System delete failed.");
                 throw err;
             }
         }

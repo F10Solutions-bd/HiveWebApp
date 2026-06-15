@@ -10,7 +10,7 @@ export type SelectOption = {
 
 type SelectProps = {
     options: SelectOption[];
-    value?: string;
+    value?: string | null;
     isModal?: boolean;
     placeholder?: string;
     className?: string;
@@ -26,7 +26,6 @@ export default function Select({
     placeholder = '',
     className = '',
     parentClassName = '',
-    dropdownWidth = '',
     onSelect,
 }: SelectProps) {
     const [open, setOpen] = useState(false);

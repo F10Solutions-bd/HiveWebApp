@@ -11,6 +11,10 @@ import { toast } from 'react-hot-toast';
 import { ThreeDot } from 'react-loading-indicators';
 import MultiSelect from '@/components/ui/MultiSelect';
 import { useRouter } from 'next/navigation';
+import Select from '@/components/modal/Select';
+import CreateUserModal from '@/features/users/components/modals/CreateUserModal';
+import DynamicHeaderTitle from '@/components/features/contact-and-vendors-details/DynamicHeaderTitle';
+import Pagination from '@/components/ui/Pagination';
 
 export interface User {
     id: number;
@@ -24,7 +28,7 @@ export interface User {
     createdAt: string;
     updatedBy: number;
     updatedAt: string;
-    roleIdList: number[];
+    roleId: number;
 }
 
 export interface CreateOrUpdateUser {
@@ -34,7 +38,7 @@ export interface CreateOrUpdateUser {
     email: string;
     firstName: string;
     lastName: string;
-    roleIdList: number[];
+    roleId: number;
 }
 
 export interface UserRole {
@@ -46,28 +50,14 @@ export default function UserListPage() {
     const api = createApiClient();
     const [users, setUsers] = useState<User[]>([]);
     const router = useRouter();
-
-    // Modal States
-    const [showFormModal, setShowFormModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editUser, setEditUser] = useState<User | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
-    const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+    const [showAddUserFormModal, setShowAddUserFormModal] = useState(false);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [searchText, setSearchText] = useState('');
 
-    // Form Data
-    const [formData, setFormData] = useState<CreateOrUpdateUser>({
-        id: 0,
-        systemId: 0,
-        userName: '',
-        email: '',
-        firstName: '',
-        lastName: '',
-        roleIdList: [],
-    });
-
-    // Table Columns
     const columns: { key: keyof User; label: string }[] = [
         { key: 'userName', label: 'User Name' },
         { key: 'email', label: 'Email' },
@@ -79,10 +69,36 @@ export default function UserListPage() {
         { key: 'updatedAt', label: 'Updated At' },
     ];
 
+    const filteredUsers = useMemo(() => {
+        if (!searchText) return users;
+
+        const q = searchText.toLowerCase();
+
+        return users.filter((row) =>
+            columns.some((col) =>
+                String(row[col.key])
+                    .toLowerCase()
+                    .includes(searchText.toLowerCase())
+            )
+        );
+    }, [users, searchText]);
+
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+    const paginatedUsers = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return filteredUsers.slice(start, start + itemsPerPage);
+    }, [filteredUsers, currentPage, itemsPerPage]);
+
+    const handleAddUserClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setShowAddUserFormModal(true);
+    };
+
     useEffect(() => {
         fetchUsers();
-        fetchRoles();
     }, []);
+
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -96,59 +112,8 @@ export default function UserListPage() {
         }
     };
 
-    const fetchRoles = async () => {
-        try {
-            const res = await api.get<UserRole[]>('/roles');
-            setUserRoles(res.data ?? []);
-        } catch (err) {
-            throw err;
-        }
-    };
-
-    const handleAdd = () => {
-        setIsEditing(false);
-        setEditUser(null);
-        setFormData({
-            id: 0,
-            systemId: 0,
-            userName: '',
-            email: '',
-            firstName: '',
-            lastName: '',
-            roleIdList: [],
-        });
-        setShowFormModal(true);
-        console.log(userRoles);
-    };
-
     const handleEdit = (id: number) => {
         router.push(`/admin/user/edit/${id}`);
-    };
-
-    const handleSave = async () => {
-        if (isEditing && editUser) {
-            try {
-                const res = await api.put<number>('/users/update', {
-                    ...formData,
-                });
-                setShowFormModal(false);
-                toast.success(res.message);
-                fetchUsers();
-            } catch (err) {
-                console.error(err);
-            }
-        } else {
-            try {
-                const res = await api.post<number>('/users/create', {
-                    ...formData,
-                });
-                setShowFormModal(false);
-                toast.success(res.message);
-                fetchUsers();
-            } catch (err) {
-                console.error(err);
-            }
-        }
     };
 
     const handleDeleteConfirm = (id: number) => {
@@ -160,131 +125,107 @@ export default function UserListPage() {
         if (deleteId !== null) {
             try {
                 const res = await api.delete<number>(
-                    `/users/delete/${deleteId}`
+                    `/users/${deleteId}`
                 );
                 setUsers(users.filter((u) => u.id !== deleteId));
                 setShowDeleteModal(false);
-                toast.success(res.message);
+                toast.success("User Deleted Successfully");
             } catch (err) {
                 console.error(err);
             }
         }
     };
 
-    // Search
-    const [searchText, setSearchText] = useState('');
-
-    const filteredUsers = useMemo(() => {
-        if (!searchText) return users;
-        return users.filter((row) =>
-            columns.some((col) =>
-                String(row[col.key])
-                    .toLowerCase()
-                    .includes(searchText.toLowerCase())
-            )
-        );
-    }, [searchText, users, columns]);
-
     return (
-        <>
-            <div>
-                <div className="flex justify-between items-center mb-2.5 gap-2 flex-wrap">
-                    <div className="text-2xl font-semibold text-black/70">
-                        Users
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                        <input
-                            type="search"
-                            placeholder="Search"
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            className="!h-[38px]"
-                        />
-                        <button
-                            onClick={handleAdd}
-                            className="flex btn-blue items-center gap-2 text-white px-4 h-10 rounded-lg transition"
-                        >
-                            <FiPlus /> Add User
-                        </button>
+        <div className="min-h-screen bg-segment">
+            {/* <DynamicHeaderTitle title="Users" /> */}
+            <div className="bg-segment rounded-lg">
+                <div className="flex flex-wrap gap-4 items-center p-2.5">
+                    <div className="flex-1 min-w-[300px]">
+                        <h1 className="text-3xl font-bold text-gray-900 p-5">Users</h1>
                     </div>
                 </div>
+            </div>
+            <div className="px-6">
+                <div className="bg-bg rounded-lg p-6 mb-4 flex justify-end gap-3 items-center">
+                    <div className="w-full max-w-xs">
+                        <input
+                            type="text"
+                            placeholder="Search by username..."
+                            value={searchText}
+                            onChange={(e) => {
+                                setSearchText(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                            className="w-full p-5 rounded-md
+                            focus:outline-none focus:ring-2 focus:ring-[#008ca8]"
+                        />
+                    </div>
+                    <button
+                        onClick={handleAddUserClick}
+                        className="flex btn-blue items-center gap-2 text-white px-4 h-10 rounded-lg transition"
+                    >
+                        <FiPlus /> Add User
+                    </button>
+                </div>
 
-                <div className="overflow-x-auto bg-white rounded-lg shadow">
+                <div className="overflow-auto bg-bg rounded-lg shadow max-h-[600px]">
                     <table className="w-full text-left border-collapse">
-                        <thead className="header-bg text-white">
+                        <thead className="sticky top-0 z-10 bg-primary text-white">
                             <tr>
-                                <th className="px-3 border-b">User Name</th>
-                                <th className="px-3 border-b">Email</th>
-                                <th className="px-3 border-b">First Name</th>
-                                <th className="px-3 border-b">Last Name</th>
-                                <th className="px-3 border-b">Created By</th>
-                                <th className="px-3 border-b">Created At</th>
-                                <th className="px-3 border-b">Updated By</th>
-                                <th className="px-3 border-b">Updated At</th>
-                                <th className="p-2.5 border-b text-center">
+                                <th className="px-3">User Name</th>
+                                <th className="px-3">Email</th>
+                                <th className="px-3">First Name</th>
+                                <th className="px-3">Last Name</th>
+                                <th className="px-3">Created By</th>
+                                <th className="px-3">Created At</th>
+                                <th className="p-2.5 text-center">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
 
-                        <tbody>
+                        <tbody className="bg-white divide-y divide-gray-200 max-h-[600px]">
                             {loading ? (
                                 <tr>
-                                    <td
-                                        colSpan={9}
-                                        className="py-10 text-center"
-                                    >
+                                    <td colSpan={9} className="py-10 text-center">
                                         <div className="flex justify-center items-center">
                                             <ThreeDot
                                                 color="#0085ad"
                                                 size="medium"
-                                                text=""
-                                                textColor=""
                                             />
                                         </div>
                                     </td>
                                 </tr>
                             ) : filteredUsers.length > 0 ? (
-                                filteredUsers.map((row) => (
+                                paginatedUsers.map((row) => (
                                     <tr
                                         key={row.id}
                                         className="hover:bg-[var(--table-row-bg)]"
                                     >
-                                        <td className="p-3 border-b font-medium text-gray-900">
+                                        <td className="p-3 font-medium text-gray-900">
                                             {row.userName}
                                         </td>
-                                        <td className="p-3 border-b text-gray-700">
+                                        <td className="p-3 text-gray-700">
                                             {row.email}
                                         </td>
-                                        <td className="p-3 border-b text-gray-700">
+                                        <td className="p-3 text-gray-700">
                                             {row.firstName}
                                         </td>
-                                        <td className="p-3 border-b text-gray-700">
+                                        <td className="p-3 text-gray-700">
                                             {row.lastName}
                                         </td>
-                                        <td className="p-3 border-b text-gray-700">
+                                        <td className="p-3 text-gray-700">
                                             {row.createdBy === 0
                                                 ? ''
                                                 : row.createdBy}
                                         </td>
-                                        <td className="p-3 border-b text-gray-600">
+                                        <td className="p-3 text-gray-600">
                                             {new Date(
                                                 row.createdAt
                                             ).toLocaleString()}
                                         </td>
-                                        <td className="p-3 border-b text-gray-700">
-                                            {row.updatedBy === 0
-                                                ? ''
-                                                : row.updatedBy}
-                                        </td>
-                                        <td className="p-3 border-b text-gray-600">
-                                            {row.updatedBy === 0
-                                                ? ''
-                                                : new Date(
-                                                      row.updatedAt
-                                                  ).toLocaleString()}
-                                        </td>
-                                        <td className="p-3 border-b text-center">
+                                        <td className="p-3 text-center">
                                             <div className="flex justify-center gap-3">
                                                 <button
                                                     onClick={() =>
@@ -319,109 +260,35 @@ export default function UserListPage() {
                                 </tr>
                             )}
                         </tbody>
-                    </table>
-                </div>
+                    </table >
+
+                    {/* Pagination */}
+                    <div className="sticky bottom-0 bg-white rounded-b-lg">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            itemsPerPage={itemsPerPage}
+                            totalItems={filteredUsers.length}
+                            onPageChange={(page) => {
+                                setCurrentPage(page);
+                            }}
+                            onItemsPerPageChange={(count) => {
+                                setItemsPerPage(count);
+                                setCurrentPage(1);
+                            }}
+                            pageSizeOptions={[10, 15, 20, 50]}
+                        />
+                    </div>
+                </div >
             </div>
 
-            <FormModal
-                isOpen={showFormModal}
-                onClose={() => setShowFormModal(false)}
-                title={isEditing ? 'Update User' : 'Create User'}
-                onSave={handleSave}
-                size="lg"
-                actionType={isEditing ? 'update' : 'create'}
-            >
-                <div className="flex flex-col gap-3">
-                    <div className="flex justify-center mb-3">
-                        <label className="mr-1">User Name:</label>
-                        <input
-                            type="text"
-                            name="userName"
-                            value={formData.userName}
-                            placeholder="User Name"
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    userName: e.target.value,
-                                })
-                            }
-                            className="w-50"
-                            required
-                        />
-                    </div>
-                    <div className="flex justify-end mb-3">
-                        <label className="mr-1">Email:</label>
-                        <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            placeholder="Email"
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    email: e.target.value,
-                                })
-                            }
-                            className="w-50"
-                            required
-                        />
-                    </div>
-                    <div className="flex justify-center mb-3">
-                        <label className="mr-1">First Name:</label>
-                        <input
-                            type="text"
-                            name="firstName"
-                            value={formData.firstName}
-                            placeholder="First Name"
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    firstName: e.target.value,
-                                })
-                            }
-                            className="w-50"
-                            required
-                        />
-                    </div>
-                    <div className="flex justify-center mb-3">
-                        <label className="mr-1">Last Name:</label>
-                        <input
-                            type="text"
-                            name="lastName"
-                            value={formData.lastName}
-                            placeholder="Last Name"
-                            onChange={(e) =>
-                                setFormData({
-                                    ...formData,
-                                    lastName: e.target.value,
-                                })
-                            }
-                            className="w-50"
-                            required
-                        />
-                    </div>
-                    <div className="flex justify-end items-center mb-3 w-full">
-                        <label className="mr-1">User Roles:</label>
-                        <div className="w-50">
-                            <MultiSelect
-                                options={userRoles.map((r) => ({
-                                    value: r.id,
-                                    label: r.name,
-                                }))}
-                                value={formData.roleIdList}
-                                onChange={(ids) =>
-                                    setFormData({
-                                        ...formData,
-                                        roleIdList: ids,
-                                    })
-                                }
-                                placeholder="-- Select User Roles --"
-                                maxHeight={200}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </FormModal>
+
+            {showAddUserFormModal &&
+                <CreateUserModal
+                    showAddUserFormModal={showAddUserFormModal}
+                    setShowAddUserFormModal={setShowAddUserFormModal} />
+            }
+
 
             <DeleteModal
                 title="Confirm Delete This User"
@@ -431,6 +298,6 @@ export default function UserListPage() {
                 message="Are you sure you want to delete this user?"
                 size="md"
             />
-        </>
+        </div >
     );
 }

@@ -67,7 +67,7 @@ export default function DashboardPage() {
     return (
         <div className="min-h-screen bg-bg text-fg">
             {/* Header */}
-            <h3 className="text-2xl font-bold text-white text-center bg-primary-hover py-2 shadow">
+            <h3 className="text-2xl font-bold text-white text-center bg-primary py-2 shadow">
                 Status
             </h3>
 

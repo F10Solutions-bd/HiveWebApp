@@ -9,7 +9,7 @@ interface FormModalProps {
     title: string;
     children: ReactNode;
     onSave: () => void;
-    size?: 'sm' | 'md' | 'lg' | '2lg';
+    // size?: 'sm' | 'md' | 'lg' | '2lg';
     actionType: string;
 }
 
@@ -19,36 +19,38 @@ export default function FormModal({
     title,
     children,
     onSave,
-    size = 'md',
+    // size = 'md',
     actionType,
 }: FormModalProps) {
     if (!isOpen) return null;
 
-    const sizeClass =
-        size === 'sm'
-            ? 'max-w-sm'
-            : size === 'md'
-              ? 'max-w-md'
-              : size === 'lg'
-                ? 'max-w-2xl'
-                : 'max-w-5xl';
+    // const sizeClass =
+    //     size === 'sm'
+    //         ? 'max-w-sm'
+    //         : size === 'md'
+    //           ? 'max-w-md'
+    //           : size === 'lg'
+    //             ? 'max-w-2xl'
+    //             : 'max-w-5xl';
 
     return (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/20 z-70 flex items-center justify-center">
             <div
-                className={`bg-white/100 rounded-lg border-1 border-gray-200 !z-10 mx-4 text-nowrap !max-h-[90%] overflow-auto relative scroll-auto`}
+                className={`bg-white/100 rounded-lg border-1 border-secondary p-3 text-nowrap !max-h-[90%] overflow-visible relative scroll-auto`}
             >
                 {/* Header */}
-                <div className="flex items-center justify-center rounded-t px-3 py-2.5">
-                    <h4 className="w-full flex justify-center text-2xl mb-0 !text-black tracking-wide">
-                        {title}
-                    </h4>
+                <div className="flex items-center justify-end rounded-t">
                     <button
                         onClick={onClose}
-                        className="w-5 text-red-600 hover:text-red-700 px-5"
+                        className="w-5 text-danger hover:text-red-600"
                     >
                         <FiX size={20} />
                     </button>
+                </div>
+                <div className="flex items-center justify-center rounded-t">
+                    <h4 className="w-full flex justify-center text-3xl mb-3 font-normal tracking-wide">
+                        {title}
+                    </h4>
                 </div>
 
                 {/*Body*/}

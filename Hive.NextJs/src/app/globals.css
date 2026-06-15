@@ -371,13 +371,13 @@ html {
 
     input:not([type='radio']),
     select {
-        border: 1px solid var(--color-border-field) !important;
+        border: 1px solid var(--color-border-field);
         padding-left: 10px;
         padding-right: 12px;
         padding-top: 0;
         padding-bottom: 0;
         height: 22px;
-        border-radius: 2px !important;
+        border-radius: 2px;
         background-color: white !important;
         outline: none !important;
         margin-left: 4px;
@@ -494,32 +494,31 @@ p {
 .login-page {
     display: flex;
     justify-content: center;
-    align-items: start;
+    align-items: center;
     height: 100vh;
     background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
     font-family: 'Poppins', sans-serif;
-    padding-top: 10%;
 }
 
 /* Card */
 .login-card {
     background: rgba(255, 255, 255, 0.95);
     padding: 2.5rem;
-    border-radius: 8px;
-    box-shadow: 2px 5px 30px #171717;
+    border-radius: 16px;
+    box-shadow: 2px 3px 10px #726868;
     width: 80%;
     max-width: 450px;
     max-height: 100%;
     text-align: center;
     backdrop-filter: blur(10px);
-    border: 0.2px solid #659bf9d4;
 }
 
 /* Headings */
 .login-title {
-    color: #2a5298;
-    font-weight: 800;
-    margin-top: 20px;
+/*    color: #primary;*/
+/*    color: #2a5298;*/
+    font-weight: 600;
+     margin-top: 10px; 
 }
 
 .login-subtitle {
@@ -538,7 +537,6 @@ p {
 
 .form-group label {
     color: #171717;
-    font-weight: 600;
     margin-bottom: 0.4rem;
     display: block;
     display: flex;
@@ -550,7 +548,7 @@ p {
     text-align: left;
 }
 
-/*.form-group input {
+/* .form-group input {
     width: 100%;
     padding: 10px 14px;
     border-radius: 10px;
@@ -567,13 +565,13 @@ p {
 
 .form-group input {
     width: 100%;
-    padding: 12px 16px;
+    padding: 16px 16px;
     /* slightly more padding for comfort */
-    border-radius: 5px;
+    border-radius: 10px;
     /* modern rounded corners */
-    border: 1px solid #ccc;
+    border: 2px solid #ddd;
     /* soft neutral border */
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     /* readable text */
     color: #333;
     /* input text color */
@@ -588,14 +586,15 @@ p {
 .form-group input::placeholder {
     color: #000;
     /* solid black placeholder */
-    opacity: 0.5;
+    opacity: 1;
     /* make it fully visible */
-    font-size: 0.8rem;
+    font-size: 1rem;
     /* slightly smaller placeholder text */
 }
 
 .form-group input:focus {
-    border-color: #007bff;
+    border-color: #008ca8;
+/*    border-color: #007bff;*/
     /* professional blue focus */
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
     /* subtle glow on focus */
@@ -617,7 +616,7 @@ p {
     padding: 12px;
     background: linear-gradient(90deg, #1e3c72, #2a5298);
     border: none;
-    border-radius: 10px;
+/*    border-radius: 10px;*/
     color: white;
     font-weight: 600;
     font-size: 1rem;
@@ -634,7 +633,7 @@ p {
 .signup-text {
     margin-top: 1.2rem;
     color: #31708f;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 500;
 }
 

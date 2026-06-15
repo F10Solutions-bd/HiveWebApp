@@ -3,20 +3,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useEffect, useState } from 'react';
-import MultiSelect from '@/components/ui/MultiSelect';
 import Loader from '@/components/ui/Loader';
 import NotFound from '@/components/ui/NotFound';
 import { FaUser, FaLock, FaShieldAlt } from 'react-icons/fa';
 import { createApiClient } from '@/services/apiClient';
-import { useParams, useRouter } from 'next/navigation';
+import { notFound, useParams, useRouter } from 'next/navigation';
 import { toDateInputString, toISOString } from '@/utils/dateHelper';
+import Select from '@/components/modal/Select';
+import { SelectOption } from '@/types/common';
+import { MdCancel, MdDelete } from 'react-icons/md';
+import { DatePicker } from '@/components/modal/DatePicker';
+import { Alumni_Sans } from 'next/font/google';
 
 interface Permission {
     id: number;
     name: string;
     granted: boolean;
 }
-interface Roles {
+interface Role {
     id: number;
     name: string;
 }
@@ -28,11 +32,14 @@ interface User {
     lastName: string;
     fullName: string;
     email: string;
-    birthDate?: string;
+    birthDate?: Date;
+    address?: string;
+    phone?: number;
     updatedAt?: string;
     password?: string;
     isActive: boolean;
-    roleIdList: number[];
+    roleId: number;
+    // roleIdList: number[];
     permissions: Permission[];
 }
 
@@ -43,9 +50,12 @@ export interface UpdateUserDto {
     lastName?: string;
     fullName?: string;
     email?: string;
-    birthDate?: string | null;
+    phone?: number;
+    address?: string;
+    birthDate?: string | null | Date;
     isActive: boolean;
-    roleIdList?: number[];
+    roleId: number;
+    // roleIdList?: number[];
     permissionIdList?: number[] | null;
 }
 
@@ -59,57 +69,57 @@ export default function EditUserPage() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<TabType>('basic');
-    const [roles, setRoles] = useState<Roles[]>([]);
+    const [rolesOptions, setRolesOptions] = useState<SelectOption[]>([]);
 
-    useEffect(() => {
-        const userId = Number(id);
-        if (!id || userId <= 0) return;
+    console.log("user", user);
+    const userId = Number(id);
 
-        const fetchData = async () => {
-            try {
-                const permRes = await api.get<Permission[]>('/permissions');
-                const allPermissions = permRes.data ?? [];
+    const fetchData = async () => {
+        try {
+            const permRes = await api.get<Permission[]>('/permissions');
+            const allPermissions = permRes.data ?? [];
 
-                const userPermRes = await api.get<number[]>(
-                    `/users/user-permissions/${userId}`
-                );
-                const grantedPermissionIds = userPermRes.data ?? [];
+            const userPermRes = await api.get<number[]>(
+                `/users/user-permissions/${userId}`
+            );
 
-                const mergedPermissions = allPermissions.map((perm) => ({
-                    ...perm,
-                    granted: grantedPermissionIds.includes(perm.id),
+            const grantedPermissionIds = userPermRes.data ?? [];
+
+            const mergedPermissions = allPermissions.map((perm) => ({
+                ...perm,
+                granted: grantedPermissionIds.includes(perm.id),
+            }));
+
+            const rolesResponse = await api.get<Role[]>('/roles');
+
+            if (rolesResponse.data) {
+                const options: SelectOption[] = rolesResponse.data.map((role) => ({
+                    label: role.name,
+                    value: role.id.toString(),
                 }));
 
-                const roles = await api.get<Roles[]>('/roles');
-
-                const userRolesRes = await api.get<object[]>(
-                    `/roles/user-roles/${userId}`
-                );
-
-                if (userRolesRes.data == null) return;
-
-                const roleIdList = userRolesRes.data.map(
-                    (item: any) => item.id
-                );
-
-                const res = await api.get<User>(`/users/${id}`);
-                const userData = {
-                    ...res.data,
-                    id: userId,
-                    birthDate: toDateInputString(res.data?.birthDate),
-                    roleIdList: roleIdList,
-                    permissions: mergedPermissions,
-                } as User;
-
-                setUser(userData);
-                setRoles(roles.data ?? []);
-            } catch (err) {
-                console.error('Error fetching user data:', err);
-            } finally {
-                setLoading(false);
+                setRolesOptions(options);
             }
-        };
 
+            const res = await api.get<User>(`/users/${id}`);
+            console.log("res from data get", res);
+
+            const userData = {
+                ...res.data,
+                id: userId,
+                birthDate: (res.data?.birthDate),
+                permissions: mergedPermissions,
+            } as User;
+
+            setUser(userData);
+        } catch (err) {
+            notFound();
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchData();
     }, [id]);
 
@@ -146,23 +156,24 @@ export default function EditUserPage() {
             lastName: user.lastName,
             fullName: user.fullName,
             email: user.email,
+            phone: user.phone,
+            address: user.address,
             birthDate: toISOString(user.birthDate),
             isActive: user.isActive,
-            roleIdList: user.roleIdList,
+            roleId: user.roleId,
             permissionIdList: user.permissions
                 .filter((p) => p.granted)
                 .map((p) => p.id),
         };
 
         try {
-            const res = await api.post<number>(
-                '/users/update-details',
+            const res = await api.put<number>(
+                `/users/${user.id}`,
                 payload
             );
-            console.log(res);
-            if (res.data) {
-                router.push(`/admin/user/details/${user.id}`);
-            }
+            console.log("payload", payload);
+
+            router.push(`/admin/user/details/${user.id}`);
         } catch (err) {
             console.error('Error updating user', err);
         }
@@ -178,27 +189,56 @@ export default function EditUserPage() {
         router.push(`/admin/user/details/${user.id}`);
     };
 
-    const containerClass = 'bg-white rounded-lg  p-6';
+    const containerClass = 'bg-white rounded-lg  p-6 mb-5';
     const sectionTitleClass =
-        'text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200 text-teal-600 ';
-    const inputClass = 'w-[75%]';
+        'text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-300 text-teal-600 ';
+    const inputClass = 'w-[50%]';
     const labelClass = 'w-[25%] flex justify-end mr-3';
     const actionButtonBase =
         'px-5 py-2 rounded-lg font-medium transition-colors';
     const tabButtonBase =
         'flex items-center px-6 py-2 gap-2 border-b-2 font-medium transition-colors whitespace-nowrap';
-    const tabButtonActive = 'border-teal-500 text-teal-600 bg-teal-50';
+    const tabButtonActive = 'border-teal-500 text-teal-600 bg-primary text-white';
     const tabButtonHover =
         'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-100';
     return (
-        <div className="min-h-screen bg-gray-50 p-4">
+        <div className="min-h-screen bg-segment p-4">
             {/*className="max-w-7xl mx-auto"*/}
             <div className="">
                 <div className={`mb-2`}>
-                    <h1 className="text-2xl font-semibold text-gray-800 mb-6">
-                        Edit User Profile
-                    </h1>
-                    <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
+                    {/* <DynamicHeaderTitle title="Edit User Profile" /> */}
+                    <div className='flex justify-between'>
+                        <div className="rounded-lg mb-2">
+                            <div className="flex flex-wrap gap-4 items-center p-2.5">
+                                <div className="flex-1 min-w-[300px]">
+                                    <div className="">
+                                        <h1 className="text-3xl font-bold text-left text-gray-900">Loads Management</h1>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {/* className="bg-secondary w-[100%] h-7 rounded-[11px] cursor-pointer flex items-center justify-center" */}
+                        <div className="flex justify-end gap-3 items-center flex-wrap">
+                            <div className="hover:opacity-60 transition-opacity 2xl:!w-[100px] !w-[110px]  duration-300 flex justify-center">
+                                <button onClick={handleSave} className="bg-primary text-bg w-[100%] h-7 rounded-[11px] cursor-pointer flex items-center justify-center">
+                                    Save
+                                </button>
+                            </div>
+                            <div className="hover:opacity-60 transition-opacity 2xl:!w-[150px] !w-[110px]  duration-300 flex justify-center">
+                                <button onClick={handleCancel} className="bg-secondary w-[100%] h-7 rounded-[11px] cursor-pointer flex items-center justify-center">
+                                    Cancel
+                                </button>
+                                <MdCancel className="h-9 w-9 p-1.5 text-bg bg-primary cursor-pointer !rounded-[50%] -ml-5 -mt-[3px]" />
+                            </div>
+                            <div className="hover:opacity-60 transition-opacity 2xl:!w-[150px] !w-[110px] duration-300 flex justify-center">
+                                <button onClick={handleDelete} className="bg-secondary w-[100%] h-7 rounded-[11px] cursor-pointer flex items-center justify-center">
+                                    Delete
+                                </button>
+                                <MdDelete className="h-9 w-9 p-1.5 text-bg bg-primary cursor-pointer !rounded-[50%] -ml-5 -mt-[3px]" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex border-b border-gray-400 my-6 overflow-x-auto gap-2 ">
                         <button
                             className={`${tabButtonBase} ${activeTab === 'basic' ? tabButtonActive : tabButtonHover}`}
                             onClick={() => setActiveTab('basic')}
@@ -206,51 +246,29 @@ export default function EditUserPage() {
                             <FaUser /> Basic Info
                         </button>
                         <button
-                            className={`${tabButtonBase} ${
-                                activeTab === 'permissions'
-                                    ? tabButtonActive
-                                    : tabButtonHover
-                            }`}
+                            className={`${tabButtonBase} ${activeTab === 'permissions'
+                                ? tabButtonActive
+                                : tabButtonHover
+                                }`}
                             onClick={() => setActiveTab('permissions')}
                         >
                             <FaShieldAlt /> Permissions
                         </button>
                     </div>
-                    <div className="flex justify-end gap-3 flex-wrap">
-                        <button
-                            onClick={handleDelete}
-                            className={`${actionButtonBase} bg-red-600 text-white hover:bg-red-700 `}
-                        >
-                            Delete User
-                        </button>
-                        <button
-                            onClick={handleCancel}
-                            className={`${actionButtonBase} bg-gray-200 text-gray-700 hover:bg-gray-300`}
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className={`${actionButtonBase} bg-teal-600 text-white hover:bg-teal-700`}
-                        >
-                            Save Profile
-                        </button>
-                    </div>
+
                 </div>
-                <div className={containerClass}>
+                <div>
                     {activeTab === 'basic' && (
-                        <div className="space-y-8">
-                            <div>
-                                <h3
-                                    className={`${sectionTitleClass} text-teal-600`}
-                                >
+                        <div className='gap-4 mb-5'>
+                            <div className={containerClass}>
+                                <h3 className="items-center flex justify-center mb-5 text-2xl">
                                     Account Info
                                 </h3>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="flex items-center ">
                                         <label className={labelClass}>
-                                            Email Address
+                                            Email Address :
                                         </label>
                                         <input
                                             type="email"
@@ -276,7 +294,7 @@ export default function EditUserPage() {
                                     {/*        className={inputClass}*/}
                                     {/*    />*/}
                                     {/*</div>*/}
-                                    <div className="flex items-center">
+                                    <div className="flex w-2/3 py-6  justify-center items-center">
                                         <input
                                             type="checkbox"
                                             id="activeAccount"
@@ -287,7 +305,7 @@ export default function EditUserPage() {
                                                     e.target.checked
                                                 )
                                             }
-                                            className="w-5 h-5  switch ml-30 text-teal-600  focus:ring-teal-500 cursor-pointer"
+                                            className="accent-primary !h-[19px] !w-[19px] cursor-pointer"
                                         />
                                         <label
                                             htmlFor="activeAccount"
@@ -298,18 +316,21 @@ export default function EditUserPage() {
                                     </div>
                                 </div>
                             </div>
-                            <div>
-                                <h3 className={`${sectionTitleClass} `}>
+
+                            <div className={containerClass}>
+                                <h3
+                                    className="items-center flex justify-center mb-5 text-2xl"
+                                >
                                     Personal Information
                                 </h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="flex items-center">
+                                    <div className="flex items-center ">
                                         <label className={labelClass}>
-                                            First Name
+                                            First Name:
                                         </label>
                                         <input
                                             type="text"
-                                            value={user.firstName}
+                                            value={user.firstName || ""}
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     'firstName',
@@ -321,11 +342,11 @@ export default function EditUserPage() {
                                     </div>
                                     <div className="flex items-center">
                                         <label className={labelClass}>
-                                            Last Name
+                                            Last Name:
                                         </label>
                                         <input
                                             type="text"
-                                            value={user.lastName}
+                                            value={user.lastName || ""}
                                             onChange={(e) =>
                                                 handleInputChange(
                                                     'lastName',
@@ -338,7 +359,7 @@ export default function EditUserPage() {
                                     <div className="flex items-center">
                                         <label className={labelClass}>
                                             {' '}
-                                            Full Name
+                                            Full Name:
                                         </label>
                                         <input
                                             type="text"
@@ -358,19 +379,57 @@ export default function EditUserPage() {
                                     </div>
                                     <div className="flex items-center">
                                         <label className={labelClass}>
-                                            Birth Date
+                                            {' '}
+                                            Address:
                                         </label>
                                         <input
-                                            type="date"
-                                            value={user.birthDate}
+                                            type="text"
+                                            value={user.address || ''}
                                             onChange={(e) =>
                                                 handleInputChange(
-                                                    'birthDate',
+                                                    'address',
                                                     e.target.value
                                                 )
                                             }
                                             className={inputClass}
                                         />
+                                    </div><div className="flex items-center">
+                                        <label className={labelClass}>
+                                            {' '}
+                                            Phone:
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={user.phone || ''}
+                                            onChange={(e) =>
+                                                handleInputChange(
+                                                    'phone',
+                                                    e.target.value
+                                                )
+                                            }
+                                            className={inputClass}
+                                        />
+                                    </div>
+                                    <div className="flex items-center">
+                                        <label className={labelClass}>
+                                            Birth Date:
+                                        </label>
+                                        <div className='flex-1'>
+                                            <DatePicker
+                                                value={user.birthDate
+                                                    ? new Date(user.birthDate)
+                                                    : null}
+                                                parentClassName="w-full"
+                                                className="!w-2/3"
+                                                placeholder='Birth Date'
+                                                onChange={(date) =>
+                                                    handleInputChange(
+                                                        'birthDate',
+                                                        date ? date.toISOString() : ''
+                                                    )
+                                                }
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -378,40 +437,49 @@ export default function EditUserPage() {
                     )}
                     {activeTab === 'permissions' && (
                         <div className="space-y-8">
-                            <div>
-                                <h3 className={sectionTitleClass}>
+                            <div className={containerClass}>
+                                <h3 className="items-center flex justify-center mb-5 text-2xl">
                                     User Roles
                                 </h3>
-                                <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-                                    <label className="text-sm font-medium text-gray-700 md:w-40">
-                                        Assigned Roles
-                                    </label>
+                                <div className="flex flex-col md:flex-row items-center gap-4">
+                                    <h3 className="items-center flex justify-center text-2xl">
+                                        Assigned Roles:
+                                    </h3>
                                     <div className="flex-1 w-full md:max-w-md">
-                                        <MultiSelect
-                                            options={roles.map((r) => ({
-                                                value: r.id,
-                                                label: r.name,
-                                            }))}
-                                            value={user.roleIdList}
-                                            onChange={(ids) =>
-                                                setUser((prev) =>
-                                                    prev
-                                                        ? {
-                                                              ...prev,
-                                                              roleIdList: ids,
-                                                          }
-                                                        : prev
-                                                )
-                                            }
-                                            placeholder="-- Select User Roles --"
-                                            maxHeight={200}
+                                        <Select
+                                            options={rolesOptions}
+                                            value={user?.roleId ? user.roleId.toString() : ''}
+                                            onSelect={(value) => setUser({ ...user, roleId: Number(value) })}
                                         />
+
+                                        {
+                                            // <MultiSelect
+                                            //     options={roles.map((r) => ({
+                                            //         value: r.id,
+                                            //         label: r.name,
+                                            //     }))}
+                                            //     value={user.roleId}
+                                            //     onChange={(ids) =>
+                                            //         setUser((prev) =>
+                                            //             prev
+                                            //                 ? {
+                                            //                     ...prev,
+                                            //                     roleIdList: ids,
+                                            //                 }
+                                            //                 : prev
+                                            //         )
+                                            //     }
+                                            //     placeholder="-- Select User Roles --"
+                                            //     maxHeight={200}
+                                            // />
+                                        }
+
                                     </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <h3 className={sectionTitleClass}>
+                            <div className={containerClass}>
+                                <h3 className="items-center flex justify-center mb-5 text-2xl">
                                     Additional Permissions
                                 </h3>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -429,7 +497,7 @@ export default function EditUserPage() {
                                                         perm.id
                                                     )
                                                 }
-                                                className="w-5 h-5 switch cursor-pointer"
+                                                className="accent-primary !h-[19px] !w-[19px] cursor-pointer"
                                             />
                                             <label
                                                 htmlFor={`perm-${perm.id}`}
@@ -445,6 +513,6 @@ export default function EditUserPage() {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

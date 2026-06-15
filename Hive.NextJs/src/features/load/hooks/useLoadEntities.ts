@@ -1,6 +1,6 @@
 import { useState, Dispatch, SetStateAction } from 'react';
 import { toast } from 'react-hot-toast';
-import { Carrier, Driver, Load } from '@/features/load/types';
+import { Carrier, CarrierFormData, Driver, Load } from '@/features/load/types';
 import api from '@/services/apiClient';
 
 export const useLoadEntities = (
@@ -30,7 +30,7 @@ export const useLoadEntities = (
             if (data && data.length > 0) {
                 setAutoPlacedCarrier(data[0]);
                 if (load) {
-                    setLoad(prev => prev ? { ...prev, carriers: [...(prev.carriers ?? []), data[0]] } : null);
+                    setLoad(prev => prev ? { ...prev, carriers: [data[0]], carrierId: data[0].id } : null);
                 }
             } else {
                 setAutoPlacedCarrier(null);
@@ -41,14 +41,23 @@ export const useLoadEntities = (
         }
     };
 
-    const handleCarrierSave = async () => {
+    const handleCarrierSave = async (data: CarrierFormData) => {
+        //console.log("FORM DATA:", data);
+
         try {
-            const res = await api.post<Carrier>('/carriers', { ...newCarrier });
+            const res = await api.post<Carrier>('/carriers',  data );
+            //const res = await api.post<Carrier>('/carriers', { ...newCarrier });
             setIsOpenAddCarrierModal(false);
             setNewCarrier({
                 name: '', email: '', mc: '', dot: '', officePhone: '',
                 mainPOC: '', terminal: '', dispatcherPhone: '', dispatcherEmail: '', address: ''
             });
+            if (res.data) {
+                setAutoPlacedCarrier(res.data);
+                if (load) {
+                    setLoad(prev => prev ? { ...prev, carriers: [res.data!], carrierId: res.data!.id } : null);
+                }
+            }
             toast.success(res.message);
         } catch (error) {
             console.error('Failed to save carrier', error);
@@ -87,7 +96,7 @@ export const useLoadEntities = (
         setDriverNameSearch('');
         setIsDriverSuggestionOpen(false);
         if (load) {
-            setLoad(prev => prev ? { ...prev, drivers: [...(prev.drivers ?? []), driver] } : null);
+            setLoad(prev => prev ? { ...prev, drivers: [driver], driverId: driver.id } : null);
         }
     };
 
@@ -98,6 +107,12 @@ export const useLoadEntities = (
             setNewDriver({
                 name: '', phone: '', truckNumber: '', trailerNumber: ''
             });
+            if (res.data) {
+                setAutoPlacedDriver(res.data);
+                if (load) {
+                    setLoad(prev => prev ? { ...prev, drivers: [res.data!], driverId: res.data!.id } : null);
+                }
+            }
             toast.success(res.message);
         } catch (error) {
             console.error('Failed to save driver', error);

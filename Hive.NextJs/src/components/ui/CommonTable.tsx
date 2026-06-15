@@ -47,7 +47,7 @@ export default function CommonTable<T extends { id: number }>({
             {/* Header with Add button and Search */}
             <div className="flex justify-between items-center mb-2.5 gap-2 flex-wrap">
                 <div className="text-2xl font-semibold text-black/70">
-                    {title}
+                    <h1 className="text-3xl font-bold text-left text-gray-900">{title}</h1>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                     <input
@@ -55,11 +55,11 @@ export default function CommonTable<T extends { id: number }>({
                         placeholder="Search"
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
-                        className="!h-[38px]"
+                        className="!h-[38px] !rounded-lg"
                     />
                     <button
                         onClick={onAdd}
-                        className="flex btn-blue items-center gap-2 text-white px-4 h-10 rounded-lg transition"
+                        className="flex btn-blue items-center gap-2 text-white px-4 h-10 !rounded-lg transition"
                     >
                         <FiPlus /> {addButtonTitle}
                     </button>
@@ -69,7 +69,7 @@ export default function CommonTable<T extends { id: number }>({
             {/* Table */}
             <div className="overflow-x-auto bg-white rounded-lg shadow">
                 <table className="w-full text-left border-collapse">
-                    <thead className="header-bg text-white">
+                    <thead className="bg-primary text-white">
                         <tr>
                             {columns.map((col) => (
                                 <th
@@ -94,12 +94,12 @@ export default function CommonTable<T extends { id: number }>({
                                     {columns.map((col) => (
                                         <td
                                             key={String(col.key)}
-                                            className="p-3 border-b"
+                                            className="p-3 border-b border-secondary"
                                         >
                                             {String(row[col.key])}
                                         </td>
                                     ))}
-                                    <td className="p-3 border-b text-center">
+                                    <td className="p-3 border-b border-secondary text-center">
                                         <div className="flex justify-center gap-3">
                                             <button
                                                 onClick={() => onEdit(row)}

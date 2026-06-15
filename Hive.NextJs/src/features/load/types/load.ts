@@ -10,7 +10,7 @@ import { Document } from "./document";
 
 export interface Load {
     id: number;
-    customerId: number;
+    customerId: number ;
     salesRepId: number;
     operatorId: number;
     loadType: string;
@@ -49,11 +49,13 @@ export interface Load {
     carrierPaymentType?: string;
     carrierAmountPaid?: number;
 
-    carriers?: Carrier[];
+    carrierId?: number;
+    driverId?: number;
+    carrier?: Carrier;
     commodities?: Commodity[];
     charges?: Charge[];
     notifications?: Notification[];
-    drivers?: Driver[];
+    driver?: Driver;
     deliveries?: Delivery[];
     pickups?: Pickup[];
     returns?: Return[];

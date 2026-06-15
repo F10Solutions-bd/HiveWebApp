@@ -6,7 +6,6 @@ import EmployeeModal from '@/components/modal/EmployeeModal';
 import CarrierModal from '@/components/modal/CarrierModal';
 import CustomerModal from '@/components/modal/CustomerModal';
 import FormModal from '@/components/modal/FormModal';
-import { createApiClient } from '@/services/apiClient';
 import { useRouter } from "next/navigation";
 //import { loadStausTableMap } from '@/features/load/constants';
 //import { toDisplayDateString } from '@/utils/dateHelper';
@@ -14,25 +13,28 @@ import { toast } from 'react-hot-toast';
 import { LoadFilter, LoadCreate } from '@/features/dashboard/types';
 import CreateQuoteModal from '@/features/Quote/components/modals/CreateQuoteModal';
 import QuickRateModal from '@/features/quickRate/components/modals/QuickRateModal';
-//import { getStatusColor } from '@/features/dashboard/constants';
-//import { getLeaderboard } from '@/features/dashboard/services/dashboard';
 import { useLoads } from '@/features/dashboard/hook/useLoads';
 import { useDropdowns } from '@/features/dashboard/hook/useDropdowns';
 import CreateLoadForm from '@/features/dashboard/components/forms/CreateLoadForm';
 import LoadTable from '@/features/dashboard/components/LoadTable';
 import { LeaderboardSection } from '@/features/dashboard/components/sections/LeaderboardSection';
-
 import OfficeModal from '@/features/dashboard/components/modals/OfficeModal';
 import { getTop5 } from '@/features/dashboard/utils/formatters';
 import { LeaderboardChartSection } from '@/features/dashboard/components/sections/LeaderboardChartSection';
 import { useLeaderboard } from '@/features/dashboard/hook/useLeaderboard';
 import { useModalManager } from '@/features/dashboard/hook/useModalManager';
+import { createLoadSchema } from '@/features/dashboard/schema/createLoad.schema';
+import { createLoad } from '@/features/dashboard/services/dashboard';
+
+import axios from 'axios';
+import { FormProvider, useForm } from 'react-hook-form';
+import { CreateLoadFormData } from '@/features/load/types/createLoadFormData';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 const DEFAULT_RANGE = "month_to_date";
 
 // Main Dashboard Component
 const Dashboard: React.FC = () => {
-    const api = createApiClient();
     const [salesDateRange, setSalesDateRange] = useState(DEFAULT_RANGE);
     const [operationsDateRange, setOperationsDateRange] = useState(DEFAULT_RANGE);
     const [officeDateRange, setOfficeDateRange] = useState(DEFAULT_RANGE);
@@ -50,11 +52,7 @@ const Dashboard: React.FC = () => {
         sales: getTop5(sales.data),
         operations: getTop5(operator.data),
         offices: getTop5(office.data),
-    }), [
-        sales,
-        operator,
-        office
-    ]);
+    }), [sales.data, operator.data, office.data]);
 
     const leaderboardLoading = {
         sales: sales.loading,
@@ -62,13 +60,6 @@ const Dashboard: React.FC = () => {
         offices: office.loading,
     };
 
-    const [loadCreateFormData, setLoadCreateFormData] = useState<LoadCreate>({
-        id: 0,
-        customerId: 0,
-        loadType: "",
-        salesRepId: 3,
-        operatorId: 3,
-    });
     const router = useRouter();
 
     const [activeLoadTypeTab, setActiveLoadTypeTab] = useState<'truckload' | 'drayage'>('truckload');
@@ -89,6 +80,7 @@ const Dashboard: React.FC = () => {
     });
 
     const { data: tableData, totalCount, loading: tableLoading } = useLoads(loadFilter);
+    // console.log("tabledata", tableData);
     const { dropdowns } = useDropdowns();
 
     const {
@@ -101,22 +93,61 @@ const Dashboard: React.FC = () => {
         closeModal,
     } = useModalManager();
 
-    const handleCreateLoad = async () => {
-        console.log("loadCreateFormData : ", loadCreateFormData);
-        try {
-            const response = await api.post<LoadCreate>("/loads", loadCreateFormData);
-            if (response.data != null) {
-                router.push(`/load/edit/${response.data.id}`);
-            }
-            closeModal();
-            toast.success(response.message);
-            return response.data;
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to create load");
-            return null;
-        }
+    const handleCloseCreateLoadModal = () => {
+        methods.reset();
+        closeModal();
     };
+
+    const methods = useForm<CreateLoadFormData>({
+        resolver: zodResolver(createLoadSchema),
+        defaultValues: {
+            customerId: null,
+            loadType: "",
+        }
+    });
+
+    const handleCreateLoad = methods.handleSubmit(
+        async (data) => {
+            try {
+                const payload: LoadCreate = {
+                    customerId: data.customerId!,
+                    loadType: data.loadType,
+                    id: 0,
+                    salesRepId: 3,
+                    operatorId: 3,
+                };
+                const response = await createLoad(payload);
+
+                if (response?.data?.id) {
+                    toast.success(response?.message || "Load created successfully");
+                    router.push(`/load/edit/${response.data.id}`);
+                    return response.data;
+                }
+
+                toast.error("Invalid response from server");
+                return null;
+
+            } catch (error) {
+                console.error(error);
+
+                if (axios.isAxiosError(error)) {
+                    toast.error(
+                        error.response?.data?.message ||
+                        error.response?.data?.error ||
+                        error.message ||
+                        "Failed to create load"
+                    );
+                } else {
+                    toast.error("Failed to create load");
+                }
+
+                return null;
+            }
+        },
+        (errors) => {
+            console.log("validation errors:", errors);
+        }
+    );
 
     const handleEntitySelection = (
         type: "employee" | "office" | "customer",
@@ -244,7 +275,7 @@ const Dashboard: React.FC = () => {
                     currentPage={loadFilter.pageIndex || 1}
                     itemsPerPage={loadFilter.pageSize || 10}
                     loading={tableLoading}
-                    onPageChange={(page) => setLoadFilter({ ...loadFilter, pageIndex: page })}
+                    onPageChange={(page) => setLoadFilter(prev => ({ ...prev, pageIndex: page }))}
                     onItemsPerPageChange={(count) => setLoadFilter({ ...loadFilter, pageSize: count, pageIndex: 1 })}
                 />
             </div>
@@ -302,20 +333,21 @@ const Dashboard: React.FC = () => {
             )}
 
             {globalModal === "load" && (
-                <FormModal
-                    isOpen={true}
-                    onClose={closeModal}
-                    headline="Create Load"
-                >
-                    <CreateLoadForm
-                        dropdowns={dropdowns}
-                        setLoadCreateFormData={setLoadCreateFormData}
-                    />
+                <FormProvider {...methods}>
+                    <FormModal
+                        isOpen={true}
+                        onClose={handleCloseCreateLoadModal}
+                        headline="Create Load"
+                    >
+                        <CreateLoadForm
+                            dropdowns={dropdowns}
+                        />
 
-                    <div className="flex justify-center mt-2">
-                        <button className="btn-primary" onClick={handleCreateLoad}> Create </button>
-                    </div>
-                </FormModal>
+                        <div className="flex justify-center mt-2">
+                            <button className="btn-primary" onClick={handleCreateLoad}> Create </button>
+                        </div>
+                    </FormModal>
+                </FormProvider>
             )}
         </div>
     );

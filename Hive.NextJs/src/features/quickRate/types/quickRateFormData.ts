@@ -1,8 +1,4 @@
-export interface QuickRateFormData {
-  equipment: string;
-  criteria: string;
-  pickupLocation: string;
-  pickupRadius: string;
-  deliveryLocation: string;
-  deliveryRadius: string;
-}
+import z from "zod";
+import { quickRateSchema } from "../schema/quickRate.schema";
+
+export type QuickRateFormData = z.infer<typeof quickRateSchema>;

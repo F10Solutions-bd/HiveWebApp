@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect } from 'react';
 import { FiX } from 'react-icons/fi';
 import { createApiClient } from '@/services/apiClient';
 import Link from 'next/link';
@@ -30,45 +30,59 @@ type Props = {
     onClose: () => void;
 };
 
+const api = createApiClient();
+
 export default function CustomerModal({
     id,
     isOpen,
     position,
     onClose,
 }: Props) {
-    const api = createApiClient();
     const [customer, setCustomer] = useState<CustomerDto | null>(null);
     const [loading, setLoading] = useState(true);
-    const [open, setOpen] = useState(true);
     const ref = useRef<HTMLDivElement>(null);
 
     // Dynamic positioning state
     const [adjustedPosition, setAdjustedPosition] = useState(position);
 
-    useEffect(() => {
-        if (isOpen && ref.current) {
-            const rect = ref.current.getBoundingClientRect();
-            let newLeft = position.left;
+    // useEffect(() => {
+    //     setAdjustedPosition(position);
+    // }, [position]);
 
-            if (position.left + rect.width > window.innerWidth) {
-                newLeft = window.innerWidth - rect.width - 20;
+    useLayoutEffect(() => {
+        if (!isOpen || !ref.current) return;
+
+        const updatePosition = () => {
+            const rect = ref.current!.getBoundingClientRect();
+
+            let left = position.left;
+            let top = position.top;
+
+            if (left + rect.width > window.innerWidth) {
+                left = window.innerWidth - rect.width - 10;
             }
-            if (newLeft < 0) newLeft = 20;
 
-            setAdjustedPosition({ top: position.top, left: newLeft });
-        } else {
-            setAdjustedPosition(position);
-        }
-    }, [isOpen, position, customer]);
+            if (top + rect.height > window.innerHeight) {
+                top = window.innerHeight - rect.height - 10;
+            }
 
-    // Close on outside click
+            setAdjustedPosition({ left, top });
+        };
+
+        updatePosition();
+
+        const observer = new ResizeObserver(updatePosition);
+        observer.observe(ref.current);
+
+        return () => observer.disconnect();
+    }, [isOpen, position]);
+
     useEffect(() => {
-        if (!isOpen) return; // Only attach listener if open
-
+        if (!isOpen) return; //Only attach listener if open
         const handler = (e: MouseEvent) => {
             // Check if the click was outside the modal ref
             if (ref.current && !ref.current.contains(e.target as Node)) {
-                onClose(); // Just tell the parent to close
+                onClose(); //Just tell the parent to close
             }
         };
 
@@ -115,93 +129,92 @@ export default function CustomerModal({
 
     return (
         <>
-            {open && (
-                <div className="fixed bg-black/10 inset-0 z-70 transition-opacity duration-150">
-                    {/* Modal */}
-                    <div
-                        ref={ref}
-                        style={{
-                            top: adjustedPosition.top,
-                            left: adjustedPosition.left,
-                        }}
-                        className="absolute bg-bg p-5 pl-2 pb-6 rounded-lg shadow-lg z-10 min-w-[350px]"
+            <div className="fixed bg-black/10 inset-0 z-70 transition-opacity duration-150">
+                {/* Modal */}
+                <div
+                    ref={ref}
+                    style={{
+                        top: adjustedPosition.top,
+                        left: adjustedPosition.left,
+                    }}
+                    className="absolute bg-bg p-5 pl-2 pb-6 rounded-lg shadow-lg z-10 min-w-[350px]"
+                >
+                    <button
+                        onClick={onClose}
+                        className="absolute top-1 right-1 text-danger cursor-pointer"
                     >
-                        <button
-                            onClick={onClose}
-                            className="absolute top-1 right-1 text-danger cursor-pointer"
-                        >
-                            <FiX size={18} />
-                        </button>
-                        {/* 
-                        {loading && <p>Loading...</p>}
-                        {!loading && !customer && (
-                            <p className="text-red-500">Customer not found</p>
-                        )} */}
+                        <FiX size={18} />
+                    </button>
 
-                        {customer && (
-                            <div className="flex justify-between relative gap-5 !text-[12px]">
-                                <div className="space-y-1">
-                                    <div className="flex gap-2.5">
-                                        <span className="font-bold w-25 text-right">
-                                            Name:
-                                        </span>
-                                        <span className='text-primary cursor-pointer underline w-30'>{customer.name}</span>
-                                    </div>
-                                    <div className="flex gap-2.5">
-                                        <span className="font-bold w-25 text-right">
-                                            Billing Address:
-                                        </span>
-                                        <span className='w-30'>{customer.billingAddress}</span>
-                                    </div>
-                                    <div className="flex gap-2.5">
-                                        <span className="font-bold w-25 text-right">
-                                            Phone:
-                                        </span>
-                                        <span className='w-30'>{customer.phone}</span>
-                                    </div>
-                                    <div className="flex gap-2.5">
-                                        <span className="font-bold w-25 text-right">
-                                            Assigned To:
-                                        </span>
-                                        <span className='w-30'>{customer.salesRepresentativeName}</span>
-                                    </div>
+                    {loading && <p className="text-center w-full">Loading...</p>}
+                    {!loading && !customer && (
+                        <p className="text-red-500 text-center !w-full">Customer not found</p>
+                    )}
+
+                    {customer && (
+                        <div className="flex justify-between relative gap-5 !text-[12px]">
+                            <div className="space-y-1">
+                                <div className="flex gap-2.5">
+                                    <span className="font-bold w-25 text-right">
+                                        Name:
+                                    </span>
+                                    <span className='text-primary cursor-pointer underline w-30'>{customer.name}</span>
                                 </div>
-
-                                <div className="space-y-1">
-                                    <div className="flex flex gap-2.5">
-                                        <span className="font-bold w-28 text-right">
-                                            Status:
-                                        </span>
-                                        <span className='w-30'>{customer.isActive ? 'Active' : 'Inactive'}</span>
-                                    </div>
-                                    <div className="flex flex gap-2.5">
-                                        <span className="font-bold w-28 text-right">
-                                            Last Load Date:
-                                        </span>
-                                        <span className='w-30'>{customer.lastLoadDate || 'N/A'}</span>
-                                    </div>
-                                    <div className="flex flex gap-2.5">
-                                        <span className="font-bold w-28 text-right">
-                                            Available Credit:
-                                        </span>
-                                        <span className='w-30'>${customer.availableCredit.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex flex gap-2.5">
-                                        <span className="font-bold w-28 text-right">
-                                            Main POC:
-                                        </span>
-                                        <span className='w-30'>{customer.mainPOC || 'N/A'}</span>
-                                    </div>
+                                <div className="flex gap-2.5">
+                                    <span className="font-bold w-25 text-right">
+                                        Billing Address:
+                                    </span>
+                                    <span className='w-30'>{customer.billingAddress}</span>
                                 </div>
-
-                                <div className="absolute right-0 -bottom-4 underline text-primary cursor-pointer">
-                                    <Link href={`/customer/${customer.id}`}>Go to Profile</Link>
+                                <div className="flex gap-2.5">
+                                    <span className="font-bold w-25 text-right">
+                                        Phone:
+                                    </span>
+                                    <span className='w-30'>{customer.phone}</span>
+                                </div>
+                                <div className="flex gap-2.5">
+                                    <span className="font-bold w-25 text-right">
+                                        Assigned To:
+                                    </span>
+                                    <span className='w-30'>{customer.salesRepresentativeName}</span>
                                 </div>
                             </div>
-                        )}
-                    </div>
+
+                            <div className="space-y-1">
+                                <div className="flex flex gap-2.5">
+                                    <span className="font-bold w-28 text-right">
+                                        Status:
+                                    </span>
+                                    <span className='w-30'>{customer.isActive ? 'Active' : 'Inactive'}</span>
+                                </div>
+                                <div className="flex flex gap-2.5">
+                                    <span className="font-bold w-28 text-right">
+                                        Last Load Date:
+                                    </span>
+                                    <span className='w-30'>{customer.lastLoadDate || 'N/A'}</span>
+                                </div>
+                                <div className="flex flex gap-2.5">
+                                    <span className="font-bold w-28 text-right">
+                                        Available Credit:
+                                    </span>
+                                    <span className='w-30'>${customer.availableCredit.toLocaleString()}</span>
+                                </div>
+                                <div className="flex flex gap-2.5">
+                                    <span className="font-bold w-28 text-right">
+                                        Main POC:
+                                    </span>
+                                    <span className='w-30'>{customer.mainPOC || 'N/A'}</span>
+                                </div>
+                            </div>
+
+                            <div className="absolute right-0 -bottom-4 underline text-primary cursor-pointer">
+                                <Link href={`/customer/${customer.id}`}>Go to Profile</Link>
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
+
         </>
     );
 }

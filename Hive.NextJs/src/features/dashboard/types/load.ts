@@ -1,9 +1,15 @@
+import { Load } from "../../load/types";
+
 export interface LoadCreate {
-    customerId: number;
+    customerId: number|null;
     loadType: string;
     salesRepId: number;
     operatorId: number;
     id: number;
+}
+export interface LoadTableData {
+    items: Load[];
+    totalCount: number;
 }
 
 export type LoadFilter = {

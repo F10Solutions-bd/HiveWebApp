@@ -23,12 +23,12 @@ const Pagination: React.FC<PaginationProps> = ({
     const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
 
     return (
-        <div className="px-6 py-4 border-t flex items-center justify-between">
+        <div className="px-6 py-3 border-t border-secondary flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <button
                     onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 border rounded-md border-primary hover:bg-gray-50 disabled:opacity-50 disabled:border-secondary disabled:cursor-not-allowed"
                 >
                     Previous
                 </button>
@@ -57,7 +57,7 @@ const Pagination: React.FC<PaginationProps> = ({
                                             onPageChange(page);
                                         }
                                     }}
-                                    className={`px-3 py-1 border rounded-md ${currentPage === page
+                                    className={`px-3 py-1 border border-primary rounded-md ${currentPage === page
                                         ? 'bg-[#008ca8] text-white'
                                         : 'hover:bg-gray-50'
                                         }`}
@@ -73,7 +73,7 @@ const Pagination: React.FC<PaginationProps> = ({
                         onPageChange(Math.min(totalPages, currentPage + 1))
                     }
                     disabled={currentPage === totalPages || totalItems === 0}
-                    className="px-3 py-1 border rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 border rounded-md border-primary hover:bg-gray-50 disabled:border-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Next
                 </button>
@@ -87,7 +87,7 @@ const Pagination: React.FC<PaginationProps> = ({
                         onChange={(e) =>
                             onItemsPerPageChange(Number(e.target.value))
                         }
-                        className="px-2  w-16"
+                        className="px-2 w-16 border !border-primary"
                     >
                         {pageSizeOptions.map((size) => (
                             <option key={size} value={size}>

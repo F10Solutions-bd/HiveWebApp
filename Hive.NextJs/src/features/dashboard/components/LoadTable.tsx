@@ -7,9 +7,10 @@ import { loadStausTableMap } from '@/features/load/constants';
 import { toDisplayDateString } from '@/utils/dateHelper';
 import { getStatusColor } from '@/features/dashboard/constants';
 import Pagination from '@/components/ui/Pagination';
+import { Load } from '../../load/types';
 
 type Props = {
-    tableData: any[];
+    tableData: Load[] | [];
     activeLoadTypeTab: 'truckload' | 'drayage';
     handleCarrierClick: (id: string, e: React.MouseEvent<HTMLElement>) => void;
     handleCustomerClick: (id: string, e: React.MouseEvent<HTMLElement>) => void;
@@ -38,7 +39,7 @@ const LoadTable: React.FC<Props> = ({
     const router = useRouter();
 
     return (
-        <div className="bg-bg rounded-lg overflow-hidden px-6 py-3">
+        <div className="bg-bg rounded-lg overflow-hidden p-3">
             <div className="overflow-x-auto">
                 <table className="datatable">
                     <thead className="">
@@ -102,13 +103,13 @@ const LoadTable: React.FC<Props> = ({
                     <tbody className="bg-white">
                         {loading ? (
                             <tr>
-                                <td colSpan={17} className="py-10 !text-center ">
+                                <td colSpan={17} className="py-10 !text-center">
                                     Loading...
                                 </td>
                             </tr>
                         ) : tableData.length === 0 ? (
                             <tr>
-                                <td colSpan={17} className="py-10 !text-center ">
+                                <td colSpan={17} className="py-10 !text-center">
                                     No data available
                                 </td>
                             </tr>
@@ -140,7 +141,8 @@ const LoadTable: React.FC<Props> = ({
                                     <td
                                         className="!text-primary font-medium"
                                     >
-                                        <span onClick={(e) => handleCarrierClick(String(load.carriers?.[0]?.id), e)} className='cursor-pointer border-b border-primary'>{load.carriers?.[0]?.name}</span>
+                                        <span onClick={(e) => handleCarrierClick(String(load.carrier?.id), e)} className='cursor-pointer border-b border-primary'>{load.carrier?.name}</span>
+                                        {/* <span onClick={(e) => handleCarrierClick(String(load.carriers?.[0]?.id), e)} className='cursor-pointer border-b border-primary'>{load.carriers?.[0]?.name}</span> */}
                                     </td>
                                     <td
                                         className="!text-primary font-medium"

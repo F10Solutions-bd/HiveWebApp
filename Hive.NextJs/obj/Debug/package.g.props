@@ -4,12 +4,13 @@
     <PackageJsonName Condition="$(PackageJsonName) == ''">hive</PackageJsonName>
     <PackageJsonVersion Condition="$(PackageJsonVersion) == ''">0.1.0</PackageJsonVersion>
     <PackageJsonPrivate Condition="$(PackageJsonPrivate) == ''">true</PackageJsonPrivate>
-    <PackageJsonScriptsDev Condition="$(PackageJsonScriptsDev) == ''">next dev --experimental-https --experimental-https-key ./localhost+112-key.pem --experimental-https-cert ./localhost+112.pem -p 3000 -H 0.0.0.0</PackageJsonScriptsDev>
+    <PackageJsonScriptsDev Condition="$(PackageJsonScriptsDev) == ''">next dev --experimental-https --experimental-https-key ./localhost+249-key.pem --experimental-https-cert ./localhost+249.pem -p 3000 -H 0.0.0.0</PackageJsonScriptsDev>
     <PackageJsonScriptsBuild Condition="$(PackageJsonScriptsBuild) == ''">next build</PackageJsonScriptsBuild>
     <PackageJsonScriptsStartHttps Condition="$(PackageJsonScriptsStartHttps) == ''">cross-env NODE_ENV=production node server.js</PackageJsonScriptsStartHttps>
     <PackageJsonScriptsLint Condition="$(PackageJsonScriptsLint) == ''">eslint</PackageJsonScriptsLint>
     <PackageJsonScriptsFormat Condition="$(PackageJsonScriptsFormat) == ''">prettier --write .</PackageJsonScriptsFormat>
     <PackageJsonDependenciesHeadlessuiReact Condition="$(PackageJsonDependenciesHeadlessuiReact) == ''">^2.2.9</PackageJsonDependenciesHeadlessuiReact>
+    <PackageJsonDependenciesHookformResolvers Condition="$(PackageJsonDependenciesHookformResolvers) == ''">^5.2.2</PackageJsonDependenciesHookformResolvers>
     <PackageJsonDependenciesAxios Condition="$(PackageJsonDependenciesAxios) == ''">^1.13.2</PackageJsonDependenciesAxios>
     <PackageJsonDependenciesClsx Condition="$(PackageJsonDependenciesClsx) == ''">^2.1.1</PackageJsonDependenciesClsx>
     <PackageJsonDependenciesCrossEnv Condition="$(PackageJsonDependenciesCrossEnv) == ''">^10.1.0</PackageJsonDependenciesCrossEnv>
@@ -20,13 +21,15 @@
     <PackageJsonDependenciesReact Condition="$(PackageJsonDependenciesReact) == ''">19.2.3</PackageJsonDependenciesReact>
     <PackageJsonDependenciesReactApexcharts Condition="$(PackageJsonDependenciesReactApexcharts) == ''">^1.9.0</PackageJsonDependenciesReactApexcharts>
     <PackageJsonDependenciesReactDom Condition="$(PackageJsonDependenciesReactDom) == ''">19.2.3</PackageJsonDependenciesReactDom>
+    <PackageJsonDependenciesReactHookForm Condition="$(PackageJsonDependenciesReactHookForm) == ''">^7.75.0</PackageJsonDependenciesReactHookForm>
     <PackageJsonDependenciesReactHotToast Condition="$(PackageJsonDependenciesReactHotToast) == ''">^2.6.0</PackageJsonDependenciesReactHotToast>
     <PackageJsonDependenciesReactIcons Condition="$(PackageJsonDependenciesReactIcons) == ''">^5.5.0</PackageJsonDependenciesReactIcons>
     <PackageJsonDependenciesReactLoadingIndicators Condition="$(PackageJsonDependenciesReactLoadingIndicators) == ''">^1.0.1</PackageJsonDependenciesReactLoadingIndicators>
     <PackageJsonDependenciesReactSelect Condition="$(PackageJsonDependenciesReactSelect) == ''">^5.10.2</PackageJsonDependenciesReactSelect>
     <PackageJsonDependenciesRecharts Condition="$(PackageJsonDependenciesRecharts) == ''">^3.6.0</PackageJsonDependenciesRecharts>
     <PackageJsonDependenciesTailwindScrollbarHide Condition="$(PackageJsonDependenciesTailwindScrollbarHide) == ''">^4.0.0</PackageJsonDependenciesTailwindScrollbarHide>
-    <PackageJsonDependenciesZod Condition="$(PackageJsonDependenciesZod) == ''">^4.3.6</PackageJsonDependenciesZod>
+    <PackageJsonDependenciesZod Condition="$(PackageJsonDependenciesZod) == ''">^4.4.2</PackageJsonDependenciesZod>
+    <PackageJsonDevdependenciesHookformDevtools Condition="$(PackageJsonDevdependenciesHookformDevtools) == ''">^4.4.0</PackageJsonDevdependenciesHookformDevtools>
     <PackageJsonDevdependenciesTailwindcssPostcss Condition="$(PackageJsonDevdependenciesTailwindcssPostcss) == ''">^4</PackageJsonDevdependenciesTailwindcssPostcss>
     <PackageJsonDevdependenciesTypesNode Condition="$(PackageJsonDevdependenciesTypesNode) == ''">^20</PackageJsonDevdependenciesTypesNode>
     <PackageJsonDevdependenciesTypesReact Condition="$(PackageJsonDevdependenciesTypesReact) == ''">^19</PackageJsonDevdependenciesTypesReact>

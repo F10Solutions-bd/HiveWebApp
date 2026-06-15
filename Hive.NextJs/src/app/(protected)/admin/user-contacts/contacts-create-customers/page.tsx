@@ -1,6 +1,10 @@
 'use client';
 import { ReactNode, useState } from 'react';
 import { ArrowLeft, PlusSquare } from 'lucide-react';
+import { createApiClient } from '@/services/apiClient';
+import { Customer } from '../customer-details/[id]/page';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 interface FormSectionProps {
     title: string;
@@ -42,39 +46,62 @@ const FormField = ({
 );
 
 export default function CreateNewCustomer() {
+    const api = createApiClient();
     const [notes, setNotes] = useState('');
-    const [state, setState] = useState('None');
-    const [country, setCountry] = useState('United States');
     const notesMaxLength = 5000;
+
+    const router = useRouter();
+
+    const handleSubmit = async (
+        e: React.FormEvent<HTMLFormElement>
+    ) => {
+        e.preventDefault();
+
+        const formData = new FormData(e.currentTarget);
+
+        const data = Object.fromEntries(formData.entries());
+
+        console.log(data);
+
+        try {
+            const response = await api.post<Customer>(
+                '/hiveCustomers',
+                data
+            );
+            toast.success(response?.message || "New Customer created successfully");
+            router.push('/admin/user-contacts/contacts');
+
+            console.log(response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     return (
         <div className="max-h-screen">
             <h3 className="text-2xl font-bold text-teal-700 text-center bg-teal-100 py-1 shadow pl-4">
                 Create New Customer
             </h3>
-
-            <div className="flex justify-between items-center min-w-80 mx-auto pt-4">
-                <button
-                    type="button"
-                    onClick={() => console.log('Go back')}
-                    className="flex items-center bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 px-4 rounded-lg shadow transition duration-200"
-                >
-                    <ArrowLeft size={18} className="mr-2" />
-                    Back to Customers List
-                </button>
-
-                <button
-                    type="button"
-                    onClick={() => console.log('Create customer')}
-                    className="flex items-center bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition duration-200"
-                >
-                    <PlusSquare size={18} className="mr-2" />
-                    Create New Customer
-                </button>
-            </div>
-
             <main className="container mx-auto p-6">
-                <form>
+                <form onSubmit={handleSubmit}>
+                    <div className="flex justify-between items-center min-w-80 mx-auto py-4">
+                        <button
+                            type="button"
+                            onClick={() => console.log('Go back')}
+                            className="flex items-center bg-yellow-400 hover:bg-yellow-500 text-black font-semibold py-2 px-4 rounded-lg shadow transition duration-200"
+                        >
+                            <ArrowLeft size={18} className="mr-2" />
+                            Back to Customers List
+                        </button>
+
+                        <button
+                            type="submit"
+                            className="flex items-center bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow transition duration-200"
+                        >
+                            <PlusSquare size={18} className="mr-2" />
+                            Create New Customer
+                        </button>
+                    </div>
                     <FormSection title="Demographic Information">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <div className="flex flex-col gap-4">
@@ -82,6 +109,7 @@ export default function CreateNewCustomer() {
                                     <input
                                         type="text"
                                         name="customer"
+                                        required
                                         placeholder=" Customer Name..[required]"
                                         className="block w-full rounded-md border-red-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border-2"
                                     />
@@ -136,6 +164,7 @@ export default function CreateNewCustomer() {
                                 <input
                                     type="text"
                                     name="address1"
+                                    required
                                     placeholder="Address Line 1..[required]"
                                     className="block w-full rounded-md border-red-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border-2"
                                 />
@@ -174,33 +203,23 @@ export default function CreateNewCustomer() {
                             </FormField>
 
                             <FormField label="State:">
-                                <select
-                                    value={state}
-                                    onChange={(e) => setState(e.target.value)}
+                                <input
+                                    type="text"
                                     name="state"
-                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border bg-white"
-                                >
-                                    <option>None</option>
-                                    <option>Alabama</option>
-                                    <option>Alaska</option>
-                                    <option>Arizona</option>
-                                    <option>...etc</option>
-                                </select>
+                                    placeholder="State"
+                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                                />
                             </FormField>
 
                             <div className="hidden lg:block"></div>
 
                             <FormField label="Country:">
-                                <select
-                                    value={country}
-                                    onChange={(e) => setCountry(e.target.value)}
+                                <input
+                                    type="text"
                                     name="country"
-                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border bg-white"
-                                >
-                                    <option>United States</option>
-                                    <option>Canada</option>
-                                    <option>Mexico</option>
-                                </select>
+                                    placeholder="Country"
+                                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2 border"
+                                />
                             </FormField>
                         </div>
                     </FormSection>

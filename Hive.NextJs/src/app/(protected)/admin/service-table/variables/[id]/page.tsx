@@ -9,7 +9,6 @@ import DeleteModal from '@/components/modal/ConfirmDeleteModal';
 import { useParams } from 'next/navigation';
 import { createApiClient } from '@/services/apiClient';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 
 export interface ServiceVariable {
@@ -47,7 +46,6 @@ export default function ServiceTableVariablesPage() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [deletingId, setDeletingId] = useState<number>(0);
     const [loading, setLoading] = useState(true);
-    const router = useRouter();
     const [formData, setFormData] = useState({
         serviceVariableName: '',
         serviceVariableValue: '',
@@ -99,7 +97,7 @@ export default function ServiceTableVariablesPage() {
             );
 
             if (res.data) {
-                toast.success('Service variable created successfully');
+                toast.success(res.message || 'Service variable created successfully');
                 setShowFormModal(false);
                 fetchServiceTables();
             }
@@ -133,17 +131,27 @@ export default function ServiceTableVariablesPage() {
         };
 
         try {
-            const res = await api.put<object>(
+            await api.put(
                 `/service-tables/variables/${payload.serviceTableId}`,
                 payload
             );
 
-            if (res.data) {
-                toast.success('Service variable updated successfully');
-                setShowFormModal(false);
-                setEditingId(null);
-                fetchServiceTables();
-            }
+            toast.success('Service variable updated successfully');
+            setShowFormModal(false);
+            setEditingId(null);
+            fetchServiceTables();
+
+            // const res = await api.put(
+            //     `/service-tables/variables/${payload.serviceTableId}`,
+            //     payload
+            // );
+
+            // if (res.data) {
+            //     toast.success('Service variable updated successfully');
+            //     setShowFormModal(false);
+            //     setEditingId(null);
+            //     fetchServiceTables();
+            // }
         } catch (error) {
             console.error('Error updating variable:', error);
             toast.error('Error updating variable');
@@ -157,14 +165,13 @@ export default function ServiceTableVariablesPage() {
 
     const handleDeleteServiceVariable = async () => {
         try {
-            const res = await api.delete<object>(
+            await api.delete<object>(
                 `/service-tables/variables/${deletingId}`
             );
 
-            if (res.data) {
-                toast.success('Variable deleted successfully');
-                fetchServiceTables();
-            }
+            toast.success('Variable deleted successfully');
+            fetchServiceTables();
+
         } catch (error) {
             console.error('Error deleting variable:', error);
             toast.error('Error deleting variable');
@@ -173,7 +180,7 @@ export default function ServiceTableVariablesPage() {
 
     const handleDeleteAllServiceVariable = async () => {
         try {
-            await api.delete<any>(`/service-tables/all-variables/${id}`);
+            await api.delete(`/service-tables/all-variables/${id}`);
             toast.success('All variables deleted successfully');
             setShowDeleteAllServiceVariableModal(false);
             fetchServiceTables();
