@@ -112,7 +112,7 @@ export default function PermissionListPage() {
                 onClose={() => setShowPermissionFormModal(false)}
                 title={isEditing ? 'Update Permission' : 'Create Permission'}
                 onSave={handleSavePermission}
-                size="lg"
+                //size="lg"
                 actionType={isEditing ? 'update' : 'create'}
             >
                 <div className="flex justify-center mb-3">
